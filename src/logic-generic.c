@@ -121,6 +121,12 @@ uint8_t* Level_get_player_keys(Level* self) {
 uint8_t* Level_get_player_boots(Level* self) {
   return self->player_boots;
 }
+uint8_t const* Level_get_player_keys_const(Level const* self) {
+  return self->player_keys;
+}
+uint8_t const* Level_get_player_boots_const(Level const* self) {
+  return self->player_boots;
+}
 uint16_t Level_get_status_flags(Level const* self) {
   return self->status_flags;
 }

@@ -323,6 +323,8 @@ uint32_t Level_get_current_tick(Level const* self);
 uint32_t Level_get_chips_left(Level const* self);
 uint8_t* Level_get_player_keys(Level* self);
 uint8_t* Level_get_player_boots(Level* self);
+uint8_t const* Level_get_player_keys_const(Level const* self);
+uint8_t const* Level_get_player_boots_const(Level const* self);
 uint16_t Level_get_status_flags(Level const* self);
 uint32_t Level_get_sfx(Level const* self);
 Prng* Level_get_prng_ptr(Level* self);
