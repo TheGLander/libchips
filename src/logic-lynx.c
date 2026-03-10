@@ -117,8 +117,7 @@ static void Level_stop_terrain_sfx(Level* level) {
 }
 
 static bool lynx_init_level(Level* self) {
-  Actor* actors = xcalloc(MAX_CREATURES, sizeof(Actor));
-  self->actors = actors;
+  memset(self->actors, 0, sizeof(Actor) * MAX_CREATURES);
   uint16_t actors_n = 0;
   Actor* chip = NULL;
   if (self->lx_state.pedantic_mode && self->status_flags & SF_BAD_TILES) {
@@ -154,7 +153,7 @@ static bool lynx_init_level(Level* self) {
     }
     // Create actors
     if (TileID_is_actor(cell->top.id)) {
-      Actor* actor = &actors[actors_n];
+      Actor* actor = &self->actors[actors_n];
       actors_n += 1;
       actor->pos = pos;
       actor->id = TileID_actor_get_id(cell->top.id);
@@ -191,12 +190,12 @@ static bool lynx_init_level(Level* self) {
   if (!chip) {
     // warn("level %d: Chip isn't on the map!", num);
     self->status_flags |= SF_INVALID;
-    chip = &actors[actors_n];
+    chip = &self->actors[actors_n];
     actors_n += 1;
     chip->pos = 0;
     chip->hidden = true;
   }
-  self->lx_state.last_actor = &actors[actors_n - 1];
+  self->lx_state.last_actor = &self->actors[actors_n - 1];
   // Swap Chip to be the first actor
   if (chip) {
     Actor* first_actor = &self->actors[0];
@@ -1435,8 +1434,9 @@ static void lynx_tick_level(Level* self) {
     }
   }
 }
+
 static void lynx_uninit_level(Level* level) {
-  free(level->actors);
+  return;
 }
 
 Ruleset const lynx_logic = {.id = Ruleset_Lynx,
