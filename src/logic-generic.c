@@ -121,6 +121,12 @@ uint8_t* Level_get_player_keys(Level* self) {
 uint8_t* Level_get_player_boots(Level* self) {
   return self->player_boots;
 }
+uint8_t const* Level_get_player_keys_const(Level const* self) {
+  return self->player_keys;
+}
+uint8_t const* Level_get_player_boots_const(Level const* self) {
+  return self->player_boots;
+}
 uint16_t Level_get_status_flags(Level const* self) {
   return self->status_flags;
 }
@@ -130,20 +136,32 @@ uint32_t Level_get_sfx(Level const* self) {
 Prng* Level_get_prng_ptr(Level* self) {
   return &self->prng;
 }
+Prng const* Level_get_prng_const_ptr(Level const* self) {
+  return &self->prng;
+}
 TileID Level_get_top_terrain(Level const* self, Position pos) {
   return self->map[pos].top.id;
 }
 TileID Level_get_bottom_terrain(Level const* self, Position pos) {
   return self->map[pos].bottom.id;
 }
-Actor* Level_get_actors_ptr(Level const* self) {
+Actor* Level_get_actors_ptr(Level* self) {
   return self->actors;
 }
-Actor* Level_get_actor_by_idx(Level const* self, uint32_t idx) {
+Actor* Level_get_actor_by_idx(Level* self, uint32_t idx) {
   return &self->actors[idx];
 }
-Actor* Level_get_chip_actor(Level const* self) {
+Actor* Level_get_chip_actor(Level* self) {
   return &self->actors[0]; // both MS and Lynx have Chip as the first actor so this is safe
+}
+Actor const* Level_get_actors_const_ptr(Level const* self) {
+  return self->actors;
+}
+Actor const* Level_get_actor_const_by_idx(Level const* self, uint32_t idx) {
+  return &self->actors[idx];
+}
+Actor const* Level_get_chip_actor_const(Level const* self) {
+  return &self->actors[0];
 }
 uint8_t* Level_player_item_ptr(Level* level, TileID id) {
   switch (id) {
