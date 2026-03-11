@@ -302,18 +302,17 @@ typedef struct Level {
   Direction rff_dir;
   int8_t init_step_parity;
   uint32_t sfx;
-  // `moves`?
   Prng prng;
-  Actor* actors;
   ConnList trap_connections;
   ConnList cloner_connections;
-  MapCell map[MAP_WIDTH * MAP_HEIGHT];
   bool level_complete;
   TriRes win_state;
   union {
     MsState ms_state;
     LxState lx_state;
   };
+  MapCell map[MAP_WIDTH * MAP_HEIGHT];
+  Actor actors[MAX_CREATURES];
 } Level;
 
 const Ruleset* Level_get_ruleset(Level const* self);
