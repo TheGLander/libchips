@@ -207,6 +207,8 @@ bool Level_player_has_item(Level const* level, TileID id) {
   return *Level_player_item_ptr((Level*)level, id) > 0;
 }
 void Level_free(Level* self) {
+  if (self == NULL)
+    return;
   self->ruleset->uninit_level(self);
   free(self);
 }

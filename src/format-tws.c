@@ -122,6 +122,8 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
 }
 
 void TWSMetadata_free(TWSMetadata* self) {
+  if (self == NULL)
+    return;
   free(self->compressed_inputs.bytes);
 }
 
