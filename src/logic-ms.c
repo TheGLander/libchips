@@ -1918,23 +1918,24 @@ static void Level_create_clones(Level* self) {
 
 static void check_and_clear_actors(Level* self) {
   // WIDTH * HEIGHT + 1 so that it's ensured it won't fire unless we're well over max possible alive creatures
-  if (self->ms_state.actor_count > MAP_WIDTH * MAP_HEIGHT + 1) {
-    // warn("%d: filled the actor array, removing dead creatures", self->current_tick);
-    size_t i = 0;
-    while (i < self->ms_state.actor_count) {
-      Actor* actor = &self->actors[i];
-      if (actor->hidden) {
-        memmove(&self->actors[i], &self->actors[i + 1], (self->ms_state.actor_count - i - 1) * sizeof(Actor));
-        self->ms_state.actor_count--;
-        for (size_t j = 0; j < self->ms_state.slip_count; ++j) { // Adjust sliplist entries
-          MsSlipper* slipper = &self->ms_state.slip_list[j];
-          if (slipper->actor - self->actors >= i) {
-            slipper->actor -= 1;
-          }
+  if (self->ms_state.actor_count <= MAP_WIDTH * MAP_HEIGHT + 1) {
+    return;
+  }
+  // warn("%d: filled the actor array, removing dead creatures", self->current_tick);
+  size_t i = 0;
+  while (i < self->ms_state.actor_count) {
+    Actor* actor = &self->actors[i];
+    if (actor->hidden) {
+      memmove(&self->actors[i], &self->actors[i + 1], (self->ms_state.actor_count - i - 1) * sizeof(Actor));
+      self->ms_state.actor_count--;
+      for (size_t j = 0; j < self->ms_state.slip_count; ++j) { // Adjust sliplist entries
+        MsSlipper* slipper = &self->ms_state.slip_list[j];
+        if (slipper->actor - self->actors >= i) {
+          slipper->actor -= 1;
         }
-      } else {
-        i++;
       }
+    } else {
+      i++;
     }
   }
 }
