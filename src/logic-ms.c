@@ -1916,7 +1916,7 @@ static void Level_create_clones(Level* self) {
   }
 }
 
-static void check_and_clear_actors(Level* self) {
+static void Level_check_and_clear_actors(Level* self) {
   // WIDTH * HEIGHT + 1 so that it's ensured it won't fire unless we're well over max possible alive creatures
   if (self->ms_state.actor_count <= MAP_WIDTH * MAP_HEIGHT + 1) {
     return;
@@ -2107,7 +2107,7 @@ static void ms_tick_level(Level* self) {
   Level_create_clones(self);
 
   // putting this at tick end so that it doesn't break iteration
-  check_and_clear_actors(self);
+  Level_check_and_clear_actors(self);
 }
 
 Ruleset const ms_logic = {.id = Ruleset_MS,
