@@ -1927,15 +1927,15 @@ static void Level_check_and_clear_actors(Level* self) {
     Actor* actor = &self->actors[i];
     if (actor->hidden) {
       memmove(&self->actors[i], &self->actors[i + 1], (self->ms_state.actor_count - i - 1) * sizeof(Actor));
-      self->ms_state.actor_count--;
-      for (size_t j = 0; j < self->ms_state.slip_count; ++j) { // Adjust sliplist entries
+      self->ms_state.actor_count -= 1;
+      for (size_t j = 0; j < self->ms_state.slip_count; j += 1) { // Adjust sliplist entries
         MsSlipper* slipper = &self->ms_state.slip_list[j];
         if (slipper->actor - self->actors >= i) {
           slipper->actor -= 1;
         }
       }
     } else {
-      i++;
+      i += 1;
     }
   }
 }
