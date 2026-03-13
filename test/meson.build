@@ -7,8 +7,10 @@ dependencies = [
 
 sources = [
   'ccl/format-ccl.cpp',
-  'logic/cclp_tws_playthrough.cpp',
-  'tws/format-tws.cpp'
+  'tws/format-tws.cpp',
+  'logic/cclp_public_tws_playthrough.cpp',
+  'logic/cclp5_submissions_tws.cpp',
+  'logic/tws_test_helpers.cpp'
 ]
 
 gtest_libchips_test = executable(
