@@ -30,3 +30,4 @@ libchips_dep = declare_dependency(
 )
 
 subdir('test')
+subdir('sdl-debug')
