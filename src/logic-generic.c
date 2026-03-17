@@ -298,6 +298,8 @@ Level Level_clone(Level const* self) {
 hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
   hash_t hash = HASH_INIT;
 
+  hash = hash_scalar(self->ruleset->id, hash);
+
   hash = hash_scalar(self->timer_offset, hash);
   hash = hash_scalar(self->time_limit, hash);
   hash = hash_scalar(self->game_input, hash);
@@ -317,10 +319,12 @@ hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
   hash = hash_scalar(self->prng.initial_seed, hash);
   hash = hash_scalar(self->prng.value, hash);
 
+  hash = hash_scalar(self->trap_connections.length, hash);
   for (size_t i = 0; i < self->trap_connections.length; i += 1) {
     hash = hash_scalar(self->trap_connections.items[i].from, hash);
     hash = hash_scalar(self->trap_connections.items[i].to, hash);
   }
+  hash = hash_scalar(self->cloner_connections.length, hash);
   for (size_t i = 0; i < self->cloner_connections.length; i += 1) {
     hash = hash_scalar(self->cloner_connections.items[i].from, hash);
     hash = hash_scalar(self->cloner_connections.items[i].to, hash);
@@ -329,12 +333,10 @@ hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
   hash = hash_scalar(self->win_state, hash);
   for (size_t i = 0; i < lengthof(self->map); i += 1) {
     MapCell const* cell = &self->map[i];
-    MapTile const* top = &cell->top;
-    MapTile const* bottom = &cell->bottom;
-    hash = hash_scalar(top->id, hash);
-    hash = hash_scalar(top->state, hash);
-    hash = hash_scalar(bottom->id, hash);
-    hash = hash_scalar(bottom->state, hash);
+    hash = hash_scalar(cell->top.id, hash);
+    hash = hash_scalar(cell->top.state, hash);
+    hash = hash_scalar(cell->bottom.id, hash);
+    hash = hash_scalar(cell->bottom.state, hash);
   }
   self->ruleset->add_hash_level(self, &hash);
 
@@ -344,6 +346,8 @@ hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
 bool Level_equals(Level const* self, Level const* other) {
   if (self == other)
     return true;
+  if (self->ruleset->id != other->ruleset->id)
+    return false;
   if (self->timer_offset != other->timer_offset)
     return false;
   if (self->time_limit != other->time_limit)
@@ -404,21 +408,17 @@ bool Level_equals(Level const* self, Level const* other) {
   }
   for (size_t i = 0; i < lengthof(self->map); i += 1) {
     MapCell const* cell_self = &self->map[i];
-    MapTile const* top_self = &cell_self->top;
-    MapTile const* bottom_self = &cell_self->bottom;
     MapCell const* cell_other = &other->map[i];
-    MapTile const* top_other = &cell_other->top;
-    MapTile const* bottom_other = &cell_other->bottom;
-    if (top_self->id != top_other->id) {
+    if (cell_self->top.id != cell_other->top.id) {
       return false;
     }
-    if (top_self->state != top_other->state) {
+    if (cell_self->top.state != cell_other->top.state) {
       return false;
     }
-    if (bottom_self->id != bottom_other->id) {
+    if (cell_self->bottom.id != cell_other->bottom.id) {
       return false;
     }
-    if (bottom_self->state != bottom_other->state) {
+    if (cell_self->bottom.state != cell_other->bottom.state) {
       return false;
     }
   }
