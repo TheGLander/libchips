@@ -494,9 +494,8 @@ static Actor* Level_look_up_creature(Level* self,
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
   for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
-    if (Actor_get_id(&self->actors[n]) == Block
-        && Actor_get_position(&self->actors[n]) == pos
-        && !Actor_get_hidden(&self->actors[n])) {
+    if (self->actors[n].id == Block && self->actors[n].pos == pos
+        && !self->actors[n].hidden) {
       return &self->actors[n];
     }
   }
@@ -1451,7 +1450,7 @@ static bool Actor_start_movement(Actor* self, Level* level, Direction dir) {
       warn("%d: Actor_start_movement from a beartrap without CS_RELEASED set", level->current_tick);
     }
     if (self->state & CS_MUTANT) {
-      MapTile_add_mutant_state(&Level_get_map_cell(level, self->pos)->bottom);
+      MapTile_remove_mutant_state(&Level_get_map_cell(level, self->pos)->bottom);
     }
   }
   self->state &= ~CS_RELEASED;
@@ -1977,7 +1976,7 @@ static bool ms_init_level(Level* self) {
         chip->direction = TileID_actor_get_dir(bottom_id);
       }
     }
-    MapTile_add_broken_state(MapCell_get_top_tile(cell));
+    MapTile_add_marker_state(MapCell_get_top_tile(cell));
   }
   pos = 0;
   while (pos < MAP_WIDTH * MAP_HEIGHT) {
