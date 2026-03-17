@@ -269,8 +269,13 @@ static void Level_reset_block_list(Level* self) {
 /* Append the given block to the end of the block list.
  */
 static Actor* Level_add_to_block_list(Level* self, Actor* block) {
+  if (self->ms_state.block_list_count == MAX_CREATURES) { // todo: go empty this out if it fills, like creatures
+    warn("%d: Block array full (NOTE: THIS SHOULD NOT BE POSSIBLE)",
+         self->current_tick);
+    return NULL;
+  }
   self->ms_state.block_list[self->ms_state.block_list_count] = block;
-  self->ms_state.block_list_count++;
+  self->ms_state.block_list_count += 1;
   return block;
 }
 
@@ -285,7 +290,7 @@ static void Level_reset_sliplist(Level* self) {
 static Actor* Level_append_to_slip_list(Level* self,
                                         Actor* actor,
                                         Direction direction) {
-  for (uint32_t n = 0; n < self->ms_state.slip_count; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1) {
     if (self->ms_state.slip_list[n].actor == actor) {
       self->ms_state.slip_list[n].direction = direction;
       return actor;
@@ -294,8 +299,8 @@ static Actor* Level_append_to_slip_list(Level* self,
 
   self->ms_state.slip_list[self->ms_state.slip_count].actor = actor;
   self->ms_state.slip_list[self->ms_state.slip_count].direction = direction;
-  self->ms_state.slip_count++;
-  self->ms_state.mscc_slippers++; /* new accounting */
+  self->ms_state.slip_count += 1;
+  self->ms_state.mscc_slippers += 1; /* new accounting */
   return actor;
 }
 
@@ -309,9 +314,9 @@ static Actor* Level_prepend_to_slip_list(Level* self,
     return actor;
   }
 
-  for (uint32_t n = self->ms_state.slip_count; n; --n)
+  for (uint32_t n = self->ms_state.slip_count; n; n -= 1)
     self->ms_state.slip_list[n] = self->ms_state.slip_list[n - 1];
-  self->ms_state.slip_count++;
+  self->ms_state.slip_count += 1;
   self->ms_state.slip_list[0].actor = actor;
   self->ms_state.slip_list[0].direction = direction;
   return actor;
@@ -321,7 +326,7 @@ static Actor* Level_prepend_to_slip_list(Level* self,
  */
 static Direction Level_get_actor_slip_dir(Level const* self,
                                           Actor const* actor) {
-  for (uint32_t n = 0; n < self->ms_state.slip_count; ++n)
+  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1)
     if (self->ms_state.slip_list[n].actor == actor)
       return self->ms_state.slip_list[n].direction;
   return DIRECTION_NIL;
@@ -332,7 +337,7 @@ static Direction Level_get_actor_slip_dir(Level const* self,
 static void Level_remove_actor_from_slip_list(Level* self, Actor const* actor) {
   uint32_t n;
 
-  for (n = 0; n < self->ms_state.slip_count; ++n) {
+  for (n = 0; n < self->ms_state.slip_count; n += 1) {
     if (self->ms_state.slip_list[n].actor == actor) {
       break;
     }
@@ -340,8 +345,8 @@ static void Level_remove_actor_from_slip_list(Level* self, Actor const* actor) {
   if (n == self->ms_state.slip_count) {
     return;
   }
-  --self->ms_state.slip_count;
-  for (; n < self->ms_state.slip_count; ++n) {
+  self->ms_state.slip_count -= 1;
+  for (; n < self->ms_state.slip_count; n += 1) {
     self->ms_state.slip_list[n] = self->ms_state.slip_list[n + 1];
   }
 }
@@ -400,7 +405,7 @@ static Direction get_ice_wall_turn_dir(TileID floor, Direction dir) {
 static Position Level_locate_trap_by_button(Level const* self,
                                             Position button_pos) {
   ConnList const* traps = &self->trap_connections;
-  for (uint8_t i = 0; i < traps->length; ++i)
+  for (uint8_t i = 0; i < traps->length; i += 1)
     if (traps->items[i].from == button_pos)
       return traps->items[i].to;
   return POSITION_NULL;
@@ -411,7 +416,7 @@ static Position Level_locate_trap_by_button(Level const* self,
 static Position Level_locate_cloner_by_button(Level const* self,
                                               Position button_pos) {
   ConnList const* cloners = &self->cloner_connections;
-  for (uint8_t i = 0; i < cloners->length; ++i)
+  for (uint8_t i = 0; i < cloners->length; i += 1)
     if (cloners->items[i].from == button_pos)
       return cloners->items[i].to;
   return POSITION_NULL;
@@ -429,7 +434,7 @@ static bool Level_is_trap_button_down(Level const* self, Position pos) {
  */
 static bool Level_is_trap_open(Level* self, Position pos, Position skip_pos) {
   ConnList* traps = &self->trap_connections;
-  for (uint8_t i = 0; i < traps->length; ++i) {
+  for (uint8_t i = 0; i < traps->length; i += 1) {
     if (traps->items[i].to == pos && traps->items[i].from != skip_pos &&
         Level_is_trap_button_down(self, traps->items[i].from)) {
       return true;
@@ -441,7 +446,7 @@ static bool Level_is_trap_open(Level* self, Position pos, Position skip_pos) {
 /* Flip-flop the state of any toggle walls.
  */
 static void Level_toggle_walls(Level* level) {
-  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; ++pos) {
+  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     MapCell* cell = Level_get_map_cell(level, pos);
     MapTile* top = MapCell_get_top_tile(cell);
     MapTile* bottom = MapCell_get_bottom_tile(cell);
@@ -481,7 +486,7 @@ static Actor* Level_create_actor(Level* level) {
                    .state = 0,
                    .move_decision = DIRECTION_NIL,};
 
-  level->ms_state.actor_count++;
+  level->ms_state.actor_count += 1;
   return actor;
 }
 
@@ -493,7 +498,7 @@ static Actor* Level_look_up_creature(Level* self,
                                      bool includechip) {
   if (!self->actors)
     return NULL;
-  for (uint32_t n = 0; n < self->ms_state.actor_count; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
     if (self->actors[n].hidden)
       continue;
     if (self->actors[n].pos == pos)
@@ -508,7 +513,7 @@ static Actor* Level_look_up_creature(Level* self,
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
   if (self->ms_state.block_list_count) {
-    for (uint32_t n = 0; n < self->ms_state.block_list_count; ++n) {
+    for (uint32_t n = 0; n < self->ms_state.block_list_count; n += 1) {
       if (self->ms_state.block_list[n]->pos == pos &&
           !self->ms_state.block_list[n]->hidden) {
         return self->ms_state.block_list[n];
@@ -616,7 +621,7 @@ static void Actor_remove(Actor* self, Level* level) {
  * process of moving at the time is given special treatment.)
  */
 static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
-  for (uint32_t n = 0; n < self->ms_state.actor_count; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
     Actor* actor = &self->actors[n]; /* convenience, Tank Top Glitch */
     if (actor->hidden || actor->id != Tank)
       continue;
@@ -706,7 +711,7 @@ static void Actor_end_floor_movement(Actor* self, Level* level) {
 static void Level_update_sliplist(Level* self) {
   if (self->ms_state.slip_count == 0)
     return;
-  for (int64_t n = self->ms_state.slip_count - 1; n >= 0; --n) {
+  for (int64_t n = self->ms_state.slip_count - 1; n >= 0; n -= 1) {
     if (!(self->ms_state.slip_list[n].actor->state & (CS_SLIP | CS_SLIDE))) {
       Actor_end_floor_movement(self->ms_state.slip_list[n].actor, self);
     }
@@ -766,7 +771,7 @@ static bool Level_push_block(Level* self,
     cr->state &= ~(CS_SLIP | CS_SLIDE);
     if (slipping) {
       /* new MSCC-like accounting */
-      self->ms_state.mscc_slippers--;
+      self->ms_state.mscc_slippers -= 1;
       Level_remove_actor_from_slip_list(self, cr);
     }
   }
@@ -1159,7 +1164,7 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
     }
   }
 
-  for (size_t n = 0; n < 4 && choices[n] != DIRECTION_NIL; ++n) {
+  for (size_t n = 0; n < 4 && choices[n] != DIRECTION_NIL; n += 1) {
     self->move_decision = choices[n];
     level->ms_state.controller_dir = self->move_decision;
     if (Actor_can_make_move(self, level, choices[n], 0))
@@ -1284,7 +1289,7 @@ static Position Actor_teleport(Actor* self, Level* level, Position start) {
   Position dest = start;
 
   for (;;) {
-    --dest;
+    dest -= 1;
     if (dest < 0)
       dest += MAP_WIDTH * MAP_HEIGHT;
     if (dest == start)
@@ -1390,7 +1395,7 @@ static void Level_spring_trap(Level* self, Position buttonpos) {
 /* Mark all buttons everywhere as having been handled.
  */
 static void Level_reset_buttons(Level* self) {
-  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; ++pos) {
+  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     MapCell* cell = Level_get_map_cell(self, pos);
     MapTile_remove_button_down_state(&cell->top);
     MapTile_remove_button_down_state(&cell->bottom);
@@ -1402,7 +1407,7 @@ static void Level_reset_buttons(Level* self) {
 static void Level_handle_buttons(Level* self) {
   TileID id;
 
-  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; ++pos) {
+  for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     MapCell* cell = Level_get_map_cell(self, pos);
     MapTile* top_tile = MapCell_get_top_tile(cell);
     MapTile* bottom_tile = MapCell_get_bottom_tile(cell);
@@ -1526,7 +1531,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
           warn("%d: Player entered door %0X without key!", level->current_tick, floor);
         }
         if (floor != Door_Green && Level_player_has_item(level, floor)) {
-          --(*Level_player_item_ptr(level, floor));
+          (*Level_player_item_ptr(level, floor)) -= 1;
         }
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_DOOR_OPENED);
@@ -1554,7 +1559,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
         break;
       case ICChip:
         if (level->chips_left)
-          --level->chips_left;
+          level->chips_left -= 1;
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_IC_COLLECTED);
         break;
@@ -1714,7 +1719,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
     if (Level_is_trap_open(level, newpos, oldpos))
       self->state |= CS_RELEASED;
   } else if (Level_cell_get_bottom_floor(level, newpos) == Beartrap) {
-    for (size_t i = 0; i < level->trap_connections.length; ++i) {
+    for (size_t i = 0; i < level->trap_connections.length; i += 1) {
       if (level->trap_connections.items[i].to == newpos) {
         self->state |= CS_RELEASED;
         break;
@@ -1763,7 +1768,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
     /* changes for MSCC-style sliplist */
     self->state &= ~(CS_SLIP | CS_SLIDE);
     if (was_slipping && self->id != Chip) {
-      level->ms_state.mscc_slippers--;
+      level->ms_state.mscc_slippers -= 1;
       Level_remove_actor_from_slip_list(level, self);
     }
   }
@@ -1805,7 +1810,7 @@ static bool Actor_advance_movement(Actor* self, Level* level, Direction dir) {
  * implemented.)
  */
 static void Level_chip_floor_movements(Level* self) { /* split into two */
-  for (uint32_t n = 0; n < self->ms_state.slip_count; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1) {
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (!(actor->state & (CS_SLIP | CS_SLIDE)))
       continue;
@@ -1856,22 +1861,22 @@ static void Level_non_chip_floor_movements(Level* self) { /* split into two */
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (actor->id == Chip) {
       /* new splitting */
-      ++n;
+      n += 1;
       continue;
     }
     if (advance) {
-      advance--;
-      ++n;
+      advance -= 1;
+      n += 1;
       continue;
     }
     if (!(self->ms_state.slip_list[n].actor->state & (CS_SLIP | CS_SLIDE))) {
-      ++n;
+      n += 1;
       continue;
     }
     Direction slipdir = self->ms_state.slip_list[n].direction;
     Direction origdir = slipdir; /* tank reversal patch */
     if (slipdir == DIRECTION_NIL) {
-      ++n;
+      n += 1;
       continue;
     }
     Actor_set_spare_direction(actor, actor->direction); /* Tank Top Glitch */
@@ -1884,17 +1889,20 @@ static void Level_non_chip_floor_movements(Level* self) { /* split into two */
       }
       if (actor->state & (CS_SLIP | CS_SLIDE)) {
         Actor_end_floor_movement(actor, self);
-        self->ms_state.mscc_slippers--; /* new MSCC accounting */
+        self->ms_state.mscc_slippers -= 1; /* new MSCC accounting */
         Actor_start_floor_movement(actor, self, Level_cell_get_bottom_floor(self, actor->pos), advanced ? DIRECTION_NIL : origdir); /* 3rd argument with tank reversal patch */
       }
     }
-    if (actor->state & CS_SLIP && advanced)
+    if (actor->state & CS_SLIP && advanced) {
       actor->state |= CS_SLIDE; /* Tank Top Glitch */
+    }
     Actor_set_spare_direction(actor, DIRECTION_NIL);  // tank top glitch
-    if (Level_check_for_ending(self))
+    if (Level_check_for_ending(self)) {
       return;
-    if (self->ms_state.mscc_slippers == oldmsccslippers)
-      advance++;
+    }
+    if (self->ms_state.mscc_slippers == oldmsccslippers) {
+      advance += 1;
+    }
   }
 }
 
@@ -1909,7 +1917,7 @@ static void Level_do_floor_movements(Level* self) { /* split version with patch 
 }
 
 static void Level_create_clones(Level* self) {
-  for (uint32_t n = 0; n < self->ms_state.actor_count; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
     if (self->actors[n].state & CS_CLONING) {
       self->actors[n].state &= ~CS_CLONING;
     }
@@ -1941,7 +1949,12 @@ static void Level_check_and_clear_actors(Level* self) {
 }
 
 static bool ms_init_level(Level* self) {
-  memset(self->actors, 0, sizeof(Actor) * MAX_CREATURES);
+  self->ms_state.actor_count = 0;
+  memset(self->actors, 0, sizeof(self->actors));
+  self->ms_state.slip_count = 0;
+  memset(self->ms_state.slip_list, 0, sizeof(self->ms_state.slip_list));
+  self->ms_state.block_list_count = 0;
+  memset(self->ms_state.block_list, 0, sizeof(self->ms_state.block_list));
 
   self->status_flags &= ~SF_BAD_TILES;
   self->status_flags |= SF_NO_ANIMATION;
@@ -1957,15 +1970,15 @@ static bool ms_init_level(Level* self) {
         MapTile_add_broken_state(MapCell_get_bottom_tile(cell));
       }
     }
-    ++pos;
-    ++cell;
+    pos += 1;
+    cell += 1;
   }
 
   Actor* chip = Level_create_actor(self);
   chip->pos = 0;
   chip->id = Chip;
   chip->direction = DIRECTION_SOUTH;
-  for (uint32_t n = 0; n < self->ms_state.init_actors_n; ++n) {
+  for (uint32_t n = 0; n < self->ms_state.init_actors_n; n += 1) {
     pos = self->ms_state.init_actor_list[n];
     if (pos < 0 || pos >= MAP_WIDTH * MAP_HEIGHT) {
       warn("level has invalid creature location (%d %d)", pos % MAP_WIDTH,
@@ -2003,11 +2016,11 @@ static bool ms_init_level(Level* self) {
       chip->pos = pos;
       chip->direction = TileID_actor_get_dir(MapTile_get_floor(bottom_tile));
     }
-    ++pos;
+    pos += 1;
   }
 
   ConnList* traps = &self->trap_connections;
-  for (uint8_t n = 0; n < traps->length; ++n) {
+  for (uint8_t n = 0; n < traps->length; n += 1) {
     if (traps->items[n].to == Level_get_chip(self)->pos ||
         Level_cell_get_top_floor(self, traps->items[n].to) == Block_Static ||
         Level_is_trap_button_down(self, traps->items[n].from)) {
@@ -2021,16 +2034,14 @@ static bool ms_init_level(Level* self) {
   self->ms_state.chip_ticks_since_moved = 0;
   self->level_complete = false;
   self->win_state = TRIRES_NOTHING;
+  self->ms_state.chip_ticks_since_moved = 0;
   self->ms_state.chip_status = CHIP_OKAY;
+  self->ms_state.chip_last_slip_dir = DIRECTION_NIL;
   self->ms_state.controller_dir = DIRECTION_NIL;
   Level_cancel_mouse_goal(self);
   Level_set_rff_dir(self, DIRECTION_NIL);
 
   return true;
-}
-
-static void ms_uninit_level(Level* level) {
-  return;
 }
 
 /* Advance the game state by one tick.
@@ -2039,46 +2050,52 @@ static void ms_tick_level(Level* self) {
   self->timer_offset = -1;
 
   if (!(self->current_tick & 3)) {
-    for (uint32_t n = 1; n < self->ms_state.actor_count; ++n) {
+    for (uint32_t n = 1; n < self->ms_state.actor_count; n += 1) {
       if (self->actors[n].state & CS_TURNING) {
         self->actors[n].state &= ~(CS_TURNING | CS_HASMOVED);
         Actor_update_floor(&self->actors[n], self);
       }
     }
-    self->ms_state.chip_ticks_since_moved++;
+    self->ms_state.chip_ticks_since_moved += 1;
     if (self->ms_state.chip_ticks_since_moved > 3) {
       self->ms_state.chip_ticks_since_moved = 3;
-      if (Level_get_chip(self)->direction != DIRECTION_NIL) /* Convergence Glitch patch (a) */
-        Level_get_chip(self)->direction = DIRECTION_SOUTH;
+      if (Level_get_chip(self)->direction != DIRECTION_NIL) {
+        Level_get_chip(self)->direction = DIRECTION_SOUTH; /* Convergence Glitch patch (a) */
+      }
       Actor_update_floor(Level_get_chip(self), self);
     }
   }
 
   self->ms_state.mscc_slippers = self->ms_state.slip_count;
   if (Level_get_chip(self)->state & (CS_SLIP | CS_SLIDE)) /* new accounting */
-    self->ms_state.mscc_slippers--;
+    self->ms_state.mscc_slippers -= 1;
 
   if (self->current_tick && !(self->current_tick & 1)) {
     self->ms_state.controller_dir = DIRECTION_NIL;
-    for (uint32_t n = 0; n < self->ms_state.actor_count; ++n) {
+    for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
       Actor* cr = &self->actors[n];
       if (!cr->hidden && cr->id != Chip && !(self->current_tick & 3) &&
-          self->ms_state.chip_status == CHIP_SQUISHED && !self->level_complete)
+          self->ms_state.chip_status == CHIP_SQUISHED && !self->level_complete) {
         self->ms_state.chip_status = CHIP_SQUISHED_DEATH; /* Squish patch */
-      if (cr->hidden || (cr->state & CS_CLONING) || cr->id == Chip)
+      }
+      if (cr->hidden || (cr->state & CS_CLONING) || cr->id == Chip) {
         continue;
+      }
       Actor_choose_move(cr, self);
-      if (cr->move_decision != DIRECTION_NIL)
+      if (cr->move_decision != DIRECTION_NIL) {
         Actor_advance_movement(cr, self, cr->move_decision);
+      }
     }
-    if (Level_check_for_ending(self))
+    if (Level_check_for_ending(self)) {
       return;
+    }
   }
 
   if (self->current_tick && !(self->current_tick & 1)) {
     Level_do_floor_movements(self);
-    if (Level_check_for_ending(self))
+    if (Level_check_for_ending(self)) {
       return;
+    }
   }
   Level_update_sliplist(self);
 
@@ -2110,7 +2127,82 @@ static void ms_tick_level(Level* self) {
   Level_check_and_clear_actors(self);
 }
 
+static void ms_uninit_level(Level* level) {
+  return;
+}
+
+static void ms_hash_level(Level const* self, hash_t* hash) {
+  *hash = hash_scalar(self->ms_state.actor_count, *hash);
+  for (size_t i = 0; i < self->ms_state.actor_count; i += 1) {
+    Actor_add_hash(&self->actors[i], hash);
+  }
+  *hash = hash_scalar(self->ms_state.slip_count, *hash);
+  for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
+    MsSlipper const* slipper = &self->ms_state.slip_list[i];
+    ptrdiff_t const actor_index = slipper->actor - self->actors;
+    hash_t slipper_hash = hash_scalar(actor_index, *hash);
+    *hash = hash_scalar(slipper_hash, *hash);
+  }
+  *hash = hash_scalar(self->ms_state.block_list_count, *hash);
+  for (size_t i = 0; i < self->ms_state.block_list_count; i += 1) {
+    Actor_add_hash(self->ms_state.block_list[i], hash);
+  }
+  *hash = hash_scalar(self->ms_state.chip_ticks_since_moved, *hash);
+  *hash = hash_scalar(self->ms_state.chip_status, *hash);
+  *hash = hash_scalar(self->ms_state.chip_last_slip_dir, *hash);
+  *hash = hash_scalar(self->ms_state.mouse_goal, *hash);
+  *hash = hash_scalar(self->ms_state.controller_dir, *hash);
+}
+
+static bool ms_level_equals(Level const* self, Level const* other) {
+  if (self == other)
+    return true;
+  if (self->ms_state.actor_count != other->ms_state.actor_count)
+    return false;
+  if (self->ms_state.slip_count != other->ms_state.slip_count)
+    return false;
+  if (self->ms_state.block_list_count != other->ms_state.block_list_count)
+    return false;
+  if (self->ms_state.chip_ticks_since_moved != other->ms_state.chip_ticks_since_moved)
+    return false;
+  if (self->ms_state.chip_status != other->ms_state.chip_status)
+    return false;
+  if (self->ms_state.chip_last_slip_dir != other->ms_state.chip_last_slip_dir)
+    return false;
+  if (self->ms_state.mouse_goal != other->ms_state.mouse_goal)
+    return false;
+  if (self->ms_state.controller_dir != other->ms_state.controller_dir)
+    return false;
+  for (size_t i = 0; i < self->ms_state.actor_count; i += 1) {
+    if (!Actor_equals(&self->actors[i], &other->actors[i])) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
+    MsSlipper const* slipper_self = &self->ms_state.slip_list[i];
+    MsSlipper const* slipper_other = &other->ms_state.slip_list[i];
+    ptrdiff_t const actor_index_self = slipper_self->actor - self->actors;
+    ptrdiff_t const actor_index_other = slipper_other->actor - other->actors;
+    if (slipper_self->direction != slipper_other->direction) {
+      return false;
+    }
+    if (actor_index_self != actor_index_other) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < self->ms_state.block_list_count; i += 1) {
+    if (!Actor_equals(self->ms_state.block_list[i], other->ms_state.block_list[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Ruleset const ms_logic = {.id = Ruleset_MS,
                           .init_level = ms_init_level,
                           .tick_level = ms_tick_level,
-                          .uninit_level = ms_uninit_level};
+                          .uninit_level = ms_uninit_level,
+                          .add_hash_level = ms_hash_level,
+                          .level_equals = ms_level_equals
+};

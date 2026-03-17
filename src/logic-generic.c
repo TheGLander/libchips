@@ -1,5 +1,8 @@
 #include <stdlib.h>
+#include <string.h>
+
 #include "logic.h"
+#include "misc.h"
 
 bool TileID_is_slide(TileID id) {
   return id >= Slide_North && id <= Slide_Random;
@@ -98,6 +101,38 @@ int8_t Actor_get_animation_frame(Actor const* actor) {
 }
 bool Actor_get_hidden(Actor const* actor) {
   return actor->hidden;
+}
+void Actor_add_hash(Actor const* actor, hash_t* hash) {
+  *hash = hash_scalar(actor->pos, *hash);
+  *hash = hash_scalar(actor->id, *hash);
+  *hash = hash_scalar(actor->direction, *hash);
+  *hash = hash_scalar(actor->move_cooldown, *hash);
+  *hash = hash_scalar(actor->animation_frame, *hash);
+  *hash = hash_scalar(actor->hidden, *hash);
+  *hash = hash_scalar(actor->state, *hash);
+  *hash = hash_scalar(actor->move_decision, *hash);
+}
+
+bool Actor_equals(Actor const* actor, Actor const* other) {
+  if (actor == other)
+    return true;
+  if (actor->pos != other->pos)
+    return false;
+  if (actor->id != other->id)
+    return false;
+  if (actor->direction != other->direction)
+    return false;
+  if (actor->move_cooldown != other->move_cooldown)
+    return false;
+  if (actor->animation_frame != other->animation_frame)
+    return false;
+  if (actor->hidden != other->hidden)
+    return false;
+  if (actor->state != other->state)
+    return false;
+  if (actor->move_decision != other->move_decision)
+    return false;
+  return true;
 }
 
 Ruleset const* Level_get_ruleset(Level const* self) {
@@ -252,4 +287,143 @@ LevelMetadata const* Level_get_metadata(Level const* self) {
 
 void Level_set_prng(Level* self, Prng other) {
   self->prng = other;
+}
+
+Level Level_clone(Level const* self) {
+  Level clone;
+  memcpy(&clone, self, sizeof(Level));
+  return clone;
+}
+
+hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
+  hash_t hash = HASH_INIT;
+
+  hash = hash_scalar(self->timer_offset, hash);
+  hash = hash_scalar(self->time_limit, hash);
+  hash = hash_scalar(self->game_input, hash);
+  hash = hash_scalar(self->current_tick, hash);
+  hash = hash_scalar(self->chips_left, hash);
+  hash = hash_scalar(self->camera_pos, hash);
+  for (uint32_t i = 0; i < 4; i += 1) {
+    hash = hash_scalar(self->player_keys[i], hash);
+  }
+  for (uint32_t i = 0; i < 4; i += 1) {
+    hash = hash_scalar(self->player_boots[i], hash);
+  }
+  hash = hash_scalar(self->status_flags, hash);
+  hash = hash_scalar(self->rff_dir, hash);
+  hash = hash_scalar(self->init_step_parity, hash);
+  hash = hash_scalar(self->sfx, hash);
+  hash = hash_scalar(self->prng.initial_seed, hash);
+  hash = hash_scalar(self->prng.value, hash);
+
+  for (size_t i = 0; i < self->trap_connections.length; i += 1) {
+    hash = hash_scalar(self->trap_connections.items[i].from, hash);
+    hash = hash_scalar(self->trap_connections.items[i].to, hash);
+  }
+  for (size_t i = 0; i < self->cloner_connections.length; i += 1) {
+    hash = hash_scalar(self->cloner_connections.items[i].from, hash);
+    hash = hash_scalar(self->cloner_connections.items[i].to, hash);
+  }
+  hash = hash_scalar(self->level_complete, hash);
+  hash = hash_scalar(self->win_state, hash);
+  for (size_t i = 0; i < lengthof(self->map); i += 1) {
+    MapCell const* cell = &self->map[i];
+    MapTile const* top = &cell->top;
+    MapTile const* bottom = &cell->bottom;
+    hash = hash_scalar(top->id, hash);
+    hash = hash_scalar(top->state, hash);
+    hash = hash_scalar(bottom->id, hash);
+    hash = hash_scalar(bottom->state, hash);
+  }
+  self->ruleset->add_hash_level(self, &hash);
+
+  return hash;
+}
+
+bool Level_equals(Level const* self, Level const* other) {
+  if (self == other)
+    return true;
+  if (self->timer_offset != other->timer_offset)
+    return false;
+  if (self->time_limit != other->time_limit)
+    return false;
+  if (self->game_input != other->game_input)
+    return false;
+  if (self->current_tick != other->current_tick)
+    return false;
+  if (self->chips_left != other->chips_left)
+    return false;
+  if (self->camera_pos != other->camera_pos)
+    return false;
+  for (size_t i = 0; i < lengthof(self->player_keys); i += 1) {
+    if (self->player_keys[i] != other->player_keys[i]) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < lengthof(self->player_boots); i += 1) {
+    if (self->player_boots[i] != other->player_boots[i]) {
+      return false;
+    }
+  }
+  if (self->status_flags != other->status_flags)
+    return false;
+  if (self->rff_dir != other->rff_dir)
+    return false;
+  if (self->init_step_parity != other->init_step_parity)
+    return false;
+  if (self->sfx != other->sfx)
+    return false;
+  if (self->prng.initial_seed != other->prng.initial_seed)
+    return false;
+  if (self->prng.value != other->prng.value)
+    return false;
+  if (self->level_complete != other->level_complete)
+    return false;
+  if (self->win_state != other->win_state)
+    return false;
+  if (self->trap_connections.length != other->trap_connections.length)
+    return false;
+  if (self->cloner_connections.length != other->cloner_connections.length)
+    return false;
+  for (size_t i = 0; i < self->trap_connections.length; i += 1) {
+    if (self->trap_connections.items[i].from != other->trap_connections.items[i].from) {
+      return false;
+    }
+    if (self->trap_connections.items[i].to != other->trap_connections.items[i].to) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < self->cloner_connections.length; i += 1) {
+    if (self->cloner_connections.items[i].from != other->cloner_connections.items[i].from) {
+      return false;
+    }
+    if (self->cloner_connections.items[i].to != other->cloner_connections.items[i].to) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < lengthof(self->map); i += 1) {
+    MapCell const* cell_self = &self->map[i];
+    MapTile const* top_self = &cell_self->top;
+    MapTile const* bottom_self = &cell_self->bottom;
+    MapCell const* cell_other = &other->map[i];
+    MapTile const* top_other = &cell_other->top;
+    MapTile const* bottom_other = &cell_other->bottom;
+    if (top_self->id != top_other->id) {
+      return false;
+    }
+    if (top_self->state != top_other->state) {
+      return false;
+    }
+    if (bottom_self->id != bottom_other->id) {
+      return false;
+    }
+    if (bottom_self->state != bottom_other->state) {
+      return false;
+    }
+  }
+
+  if (!self->ruleset->level_equals(self, other))
+    return false;
+  return true;
 }
