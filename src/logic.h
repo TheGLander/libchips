@@ -246,9 +246,6 @@ typedef struct MsSlipper {
 typedef struct MsState {
   uint32_t actor_count;
   uint32_t slip_count;
-  MsSlipper slip_list[MAX_CREATURES];
-  uint32_t block_list_count;
-  Actor* block_list[MAX_CREATURES];
   uint32_t mscc_slippers; // transient field, reset each tick
   uint8_t chip_ticks_since_moved;
   ChipStatus chip_status;
@@ -257,6 +254,7 @@ typedef struct MsState {
   Direction controller_dir;
   uint16_t init_actors_n; // used for building level
   Position init_actor_list[256]; // ditto
+  MsSlipper slip_list[MAX_CREATURES]; // placed at the end so that important field offsets aren't massive
 } MsState;
 
 typedef struct LxState {
