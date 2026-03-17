@@ -18,5 +18,6 @@ typedef std::optional<LevelsetTwssetPair> LevelsetTwssetPairOptional;
 
 void load_test_set(uint8_t const* levelset, size_t levelset_size, uint8_t const* tws, size_t tws_size,
     bool allow_tick_difference = false, size_t skip_levels[] = nullptr, size_t skip_size = 0);
+bool test_level(Level* level, TWSMetadata const* solution, GameInputList* input_list, bool allow_tick_difference = false);
 
 #endif //LIBCHIPS_TWS_TEST_HELPERS_H

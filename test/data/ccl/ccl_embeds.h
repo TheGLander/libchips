@@ -162,4 +162,8 @@ const uint8_t CCLP5_voting_Nonsense_ccl[] = {
 #embed "CCLP5_voting/CCLP5Voting-Nonsense.dat"
 };
 
+const uint8_t CID_PatchTests_ccl[] = {
+#embed "ChosenID/PATCH-TESTS.ccl"
+};
+
 #endif //LIBCHIPS_CCL_EMBEDS_H

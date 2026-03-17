@@ -50,6 +50,38 @@ void print_moves(uint16_t level_num, GameInputList const* move_list, uint32_t nu
   putc('\n', stdout);
 }
 
+bool test_level(Level* level, TWSMetadata const* solution, GameInputList* input_list, bool allow_tick_difference) {
+  EXPECT_GE(input_list->count, TWSMetadata_get_length(solution));
+
+  for (size_t j = 0; j < input_list->count; j += 1) {
+    Level_set_game_input(level, GameInputList_get_input(input_list, j));
+    Level_tick(level);
+  }
+
+  if (Level_get_win_state(level) != TRIRES_SUCCESS && level->ruleset->id == Ruleset_MS) {
+    //you can thank MS for slides into the exit being weird
+    Level_set_game_input(level, GameInputList_get_input(input_list, DIRECTION_NIL));
+    Level_tick(level);
+  }
+
+  if (level->ruleset->id == Ruleset_Lynx) {
+    // Skip through the Lynx endgame timer
+    while (level->lx_state.endgame_timer > 0) {
+      Level_tick(level);
+    }
+  }
+
+  EXPECT_EQ(Level_get_win_state(level), TRIRES_SUCCESS);
+  if (!allow_tick_difference) {
+    EXPECT_EQ(Level_get_current_tick(level) + Level_get_time_offset(level), TWSMetadata_get_length(solution));
+  } else {
+    int64_t ticks_diff = std::abs(TWSMetadata_get_length(solution) - static_cast<int64_t>(Level_get_current_tick(level) + Level_get_time_offset(level)));
+    EXPECT_LE(ticks_diff, 1);
+  }
+
+  return Level_get_win_state(level) == TRIRES_SUCCESS;
+}
+
 void testset(LevelsetTwssetPair pair, bool allow_tick_difference, size_t skip_levels[], size_t skip_size) {
   EXPECT_EQ(LevelSet_get_levels_n(pair.set), TWSSet_get_solutions_n(pair.tws));
 
@@ -79,39 +111,9 @@ void testset(LevelsetTwssetPair pair, bool allow_tick_difference, size_t skip_le
     Result_GameInputList res = TWSMetadata_prepare_inputs(solution);
     EXPECT_TRUE(res.success);
     GameInputList input_list = res.value;
-
-    EXPECT_GE(input_list.count, TWSMetadata_get_length(solution));
-
-    for (size_t j = 0; j < input_list.count; j += 1) {
-      Level_set_game_input(level, GameInputList_get_input(&input_list, j));
-      Level_tick(level);
-    }
-
-    if (Level_get_win_state(level) != TRIRES_SUCCESS && ruleset->id == Ruleset_MS) {
-      //you can thank MS for slides into the exit being weird
-      Level_set_game_input(level, GameInputList_get_input(&input_list, DIRECTION_NIL));
-      Level_tick(level);
-    }
-
-    if (ruleset->id == Ruleset_Lynx) {
-      // Skip through the Lynx endgame timer
-      while (level->lx_state.endgame_timer > 0) {
-        Level_tick(level);
-      }
-    }
-
-    if (Level_get_win_state(level) != TRIRES_SUCCESS) {
+    if (!test_level(level, solution, &input_list, allow_tick_difference)) {
       print_moves(TWSMetadata_get_level_num(solution), &input_list, TWSMetadata_get_length(solution));
     }
-
-    EXPECT_EQ(Level_get_win_state(level), TRIRES_SUCCESS);
-    if (!allow_tick_difference) {
-      EXPECT_EQ(Level_get_current_tick(level) + Level_get_time_offset(level), TWSMetadata_get_length(solution));
-    } else {
-      int64_t ticks_diff = std::abs(TWSMetadata_get_length(solution) - static_cast<int64_t>(Level_get_current_tick(level) + Level_get_time_offset(level)));
-      EXPECT_LE(ticks_diff, 1);
-    }
-
     GameInputList_free(&input_list);
     Level_free(level);
   }
