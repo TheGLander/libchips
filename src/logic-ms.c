@@ -260,25 +260,6 @@ static TriRes Level_check_for_ending(Level* self) {
   return self->win_state;
 }
 
-/* Empty the list of "active" blocks.
- */
-static void Level_reset_block_list(Level* self) {
-  self->ms_state.block_list_count = 0;
-}
-
-/* Append the given block to the end of the block list.
- */
-static Actor* Level_add_to_block_list(Level* self, Actor* block) {
-  if (self->ms_state.block_list_count == MAX_CREATURES) { // todo: go empty this out if it fills, like creatures
-    warn("%d: Block array full (NOTE: THIS SHOULD NOT BE POSSIBLE)",
-         self->current_tick);
-    return NULL;
-  }
-  self->ms_state.block_list[self->ms_state.block_list_count] = block;
-  self->ms_state.block_list_count += 1;
-  return block;
-}
-
 /* Empty the list of sliding creatures.
  */
 static void Level_reset_sliplist(Level* self) {
@@ -512,12 +493,10 @@ static Actor* Level_look_up_creature(Level* self,
  * currently "active", it is automatically added to the block list.
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
-  if (self->ms_state.block_list_count) {
-    for (uint32_t n = 0; n < self->ms_state.block_list_count; n += 1) {
-      if (self->ms_state.block_list[n]->pos == pos &&
-          !self->ms_state.block_list[n]->hidden) {
-        return self->ms_state.block_list[n];
-      }
+  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+    if (self->actors[n].id == Block && self->actors[n].pos == pos
+        && !self->actors[n].hidden) {
+      return &self->actors[n];
     }
   }
 
@@ -537,8 +516,7 @@ static Actor* Level_look_up_block(Level* self, Position pos) {
   else
     warn("%d: Level_look_up_block called on blockless location",
          self->current_tick);
-
-  return Level_add_to_block_list(self, block);
+  return block;
 }
 
 /* Update the given creature's tile on the map to reflect its current
@@ -601,8 +579,6 @@ static Actor* Level_awaken_creature(Level* self, Position pos) {
   new->id = TileID_actor_get_id(tileid);
   new->direction = TileID_actor_get_dir(tileid);
   new->pos = pos;
-  if (new->id == Block)
-    Level_add_to_block_list(self, new);
   return new;
 }
 
@@ -1474,7 +1450,7 @@ static bool Actor_start_movement(Actor* self, Level* level, Direction dir) {
       warn("%d: Actor_start_movement from a beartrap without CS_RELEASED set", level->current_tick);
     }
     if (self->state & CS_MUTANT) {
-      MapTile_add_mutant_state(&Level_get_map_cell(level, self->pos)->bottom);
+      MapTile_remove_mutant_state(&Level_get_map_cell(level, self->pos)->bottom);
     }
   }
   self->state &= ~CS_RELEASED;
@@ -1953,8 +1929,6 @@ static bool ms_init_level(Level* self) {
   memset(self->actors, 0, sizeof(self->actors));
   self->ms_state.slip_count = 0;
   memset(self->ms_state.slip_list, 0, sizeof(self->ms_state.slip_list));
-  self->ms_state.block_list_count = 0;
-  memset(self->ms_state.block_list, 0, sizeof(self->ms_state.block_list));
 
   self->status_flags &= ~SF_BAD_TILES;
   self->status_flags |= SF_NO_ANIMATION;
@@ -2002,7 +1976,7 @@ static bool ms_init_level(Level* self) {
         chip->direction = TileID_actor_get_dir(bottom_id);
       }
     }
-    MapTile_add_broken_state(MapCell_get_top_tile(cell));
+    MapTile_add_marker_state(MapCell_get_top_tile(cell));
   }
   pos = 0;
   while (pos < MAP_WIDTH * MAP_HEIGHT) {
@@ -2143,10 +2117,6 @@ static void ms_hash_level(Level const* self, hash_t* hash) {
     hash_t slipper_hash = hash_scalar(actor_index, *hash);
     *hash = hash_scalar(slipper_hash, *hash);
   }
-  *hash = hash_scalar(self->ms_state.block_list_count, *hash);
-  for (size_t i = 0; i < self->ms_state.block_list_count; i += 1) {
-    Actor_add_hash(self->ms_state.block_list[i], hash);
-  }
   *hash = hash_scalar(self->ms_state.chip_ticks_since_moved, *hash);
   *hash = hash_scalar(self->ms_state.chip_status, *hash);
   *hash = hash_scalar(self->ms_state.chip_last_slip_dir, *hash);
@@ -2160,8 +2130,6 @@ static bool ms_level_equals(Level const* self, Level const* other) {
   if (self->ms_state.actor_count != other->ms_state.actor_count)
     return false;
   if (self->ms_state.slip_count != other->ms_state.slip_count)
-    return false;
-  if (self->ms_state.block_list_count != other->ms_state.block_list_count)
     return false;
   if (self->ms_state.chip_ticks_since_moved != other->ms_state.chip_ticks_since_moved)
     return false;
@@ -2187,11 +2155,6 @@ static bool ms_level_equals(Level const* self, Level const* other) {
       return false;
     }
     if (actor_index_self != actor_index_other) {
-      return false;
-    }
-  }
-  for (size_t i = 0; i < self->ms_state.block_list_count; i += 1) {
-    if (!Actor_equals(self->ms_state.block_list[i], other->ms_state.block_list[i])) {
       return false;
     }
   }
