@@ -4,7 +4,6 @@
 #include "formats.h"
 
 // Sure would be great to have `constexpr` for `TileID_with_dir`
-//use C++ then
 #define north(id) id
 #define west(id) ((id) | 1)
 #define south(id) ((id) | 2)

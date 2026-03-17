@@ -3,7 +3,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <limits.h>
+
 #include "random.h"
+#include "hash.h"
 
 #define MAP_WIDTH (32)
 #define MAP_HEIGHT (32)
@@ -178,7 +181,7 @@ enum {
   GAME_INPUT_ABS_MOUSE_MOVE_LAST =
       GAME_INPUT_ABS_MOUSE_MOVE_FIRST +
       MAP_WIDTH *
-          MAP_HEIGHT,  // todo: what the ever loving hell is this, is this used?
+          MAP_HEIGHT,  // todo: what is this, is this used? Seriously its an entire map mouse, that can't be used
 };
 bool GameInput_is_directional(GameInput self);
 
@@ -199,6 +202,8 @@ Direction Actor_get_direction(Actor const* actor);
 int8_t Actor_get_move_cooldown(Actor const* actor);
 int8_t Actor_get_animation_frame(Actor const* actor);
 bool Actor_get_hidden(Actor const* actor);
+void Actor_add_hash(Actor const* actor, hash_t* hash);
+bool Actor_equals(Actor const* actor, Actor const* other);
 
 typedef struct TileConn {
   Position from;
@@ -244,14 +249,14 @@ typedef struct MsState {
   MsSlipper slip_list[MAX_CREATURES];
   uint32_t block_list_count;
   Actor* block_list[MAX_CREATURES];
-  uint32_t mscc_slippers;
+  uint32_t mscc_slippers; // transient field, reset each tick
   uint8_t chip_ticks_since_moved;
   ChipStatus chip_status;
   Direction chip_last_slip_dir;
   Position mouse_goal;
   Direction controller_dir;
-  uint16_t init_actors_n;
-  Position init_actor_list[256];
+  uint16_t init_actors_n; // used for building level
+  Position init_actor_list[256]; // ditto
 } MsState;
 
 typedef struct LxState {
@@ -277,6 +282,8 @@ typedef struct Ruleset {
   bool (*init_level)(Level*);
   void (*tick_level)(Level*);
   void (*uninit_level)(Level*);
+  void (*add_hash_level)(Level const*, hash_t*);
+  bool (*level_equals)(Level const*, Level const*);
 } Ruleset;
 RulesetID Ruleset_get_id(const Ruleset* self);
 
@@ -347,7 +354,9 @@ int8_t Level_get_init_step_parity(Level const* self);
 void Level_set_init_step_parity(Level* self, int8_t parity);
 LevelMetadata const* Level_get_metadata(Level const* self);
 void Level_set_prng(Level* self, Prng other);
-
+Level Level_clone(Level const* self);
+hash_t Level_get_hash(Level const* self);
+bool Level_equals(Level const* self, Level const* other);
 
 typedef enum Sfx {
   SND_CHIP_LOSES = 0,

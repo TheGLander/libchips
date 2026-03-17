@@ -34,7 +34,7 @@
 #endif
 #endif
 
-#define lengthof(arr) (sizeof(arr) / sizeof(arr[0]))
+#define lengthof(arr) (sizeof(arr) / sizeof(arr[0])) // Be careful, never pass a pointer, only a full array
 
 void* xmalloc(size_t size) attr_malloc attr_alloc_size((1));
 void* xcalloc(size_t memb_size, size_t memb_n) attr_malloc

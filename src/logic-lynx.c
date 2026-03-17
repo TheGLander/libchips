@@ -1439,7 +1439,96 @@ static void lynx_uninit_level(Level* level) {
   return;
 }
 
+static void lynx_hash_level(Level const* self, hash_t* hash) {
+  *hash = hash_scalar(self->lx_state.pedantic_mode, *hash);
+  ptrdiff_t chip_colliding_actor = 0;
+  if (self->lx_state.chip_colliding_actor) {
+    chip_colliding_actor = self->lx_state.chip_colliding_actor - self->actors;
+  }
+  *hash = hash_scalar(chip_colliding_actor, *hash);
+  ptrdiff_t last_actor = 0;
+  if (self->lx_state.last_actor) {
+    last_actor = self->lx_state.last_actor - self->actors;
+  }
+  *hash = hash_scalar(last_actor, *hash);
+  *hash = hash_scalar(self->lx_state.chip_predicted_pos, *hash);
+  *hash = hash_scalar(self->lx_state.to_place_wall_pos, *hash);
+  *hash = hash_scalar(self->lx_state.prng1, *hash);
+  *hash = hash_scalar(self->lx_state.prng2, *hash);
+  *hash = hash_scalar(self->lx_state.endgame_timer, *hash);
+  *hash = hash_scalar(self->lx_state.toggle_walls_xor, *hash);
+  *hash = hash_scalar(self->lx_state.chip_stuck, *hash);
+  *hash = hash_scalar(self->lx_state.chip_pushing, *hash);
+  *hash = hash_scalar(self->lx_state.chip_bonked, *hash);
+  *hash = hash_scalar(self->lx_state.map_breached, *hash);
+
+  for (ptrdiff_t i = 0; i <= last_actor; i += 1) {
+    Actor const* actor = &self->actors[i];
+    Actor_add_hash(actor, hash);
+  }
+}
+
+static bool lynx_level_equals(Level const* self, Level const* other) {
+  if (self == other)
+    return true;
+  if (self->lx_state.pedantic_mode != other->lx_state.pedantic_mode)
+    return false;
+  if (self->lx_state.chip_predicted_pos != other->lx_state.chip_predicted_pos)
+    return false;
+  if (self->lx_state.to_place_wall_pos != other->lx_state.to_place_wall_pos)
+    return false;
+  if (self->lx_state.prng1 != other->lx_state.prng1)
+    return false;
+  if (self->lx_state.prng2 != other->lx_state.prng2)
+    return false;
+  if (self->lx_state.endgame_timer != other->lx_state.endgame_timer)
+    return false;
+  if (self->lx_state.toggle_walls_xor != other->lx_state.toggle_walls_xor)
+    return false;
+  if (self->lx_state.chip_stuck != other->lx_state.chip_stuck)
+    return false;
+  if (self->lx_state.chip_pushing != other->lx_state.chip_pushing)
+    return false;
+  if (self->lx_state.chip_bonked != other->lx_state.chip_bonked)
+    return false;
+  if (self->lx_state.map_breached != other->lx_state.map_breached)
+    return false;
+
+  ptrdiff_t chip_colliding_actor_self = 0;
+  ptrdiff_t chip_colliding_actor_other = 0;
+  if (self->lx_state.chip_colliding_actor) {
+    chip_colliding_actor_self = self->lx_state.chip_colliding_actor - self->actors;
+  }
+  if (other->lx_state.chip_colliding_actor) {
+    chip_colliding_actor_other = other->lx_state.chip_colliding_actor - other->actors;
+  }
+  if (chip_colliding_actor_self != chip_colliding_actor_other)
+    return false;
+  ptrdiff_t last_actor_self = 0;
+  ptrdiff_t last_actor_other = 0;
+  if (self->lx_state.last_actor) {
+    last_actor_self = self->lx_state.last_actor - self->actors;
+  }
+  if (other->lx_state.last_actor) {
+    last_actor_other = other->lx_state.last_actor - other->actors;
+  }
+  if (last_actor_self != last_actor_other)
+    return false;
+  for (ptrdiff_t i = 0; i <= last_actor_self; i++) {
+    Actor const* actor_self = &self->actors[i];
+    Actor const* actor_other = &other->actors[i];
+    if (!Actor_equals(actor_self, actor_other)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Ruleset const lynx_logic = {.id = Ruleset_Lynx,
                             .init_level = lynx_init_level,
                             .tick_level = lynx_tick_level,
-                            .uninit_level = lynx_uninit_level};
+                            .uninit_level = lynx_uninit_level,
+                            .add_hash_level = lynx_hash_level,
+                            .level_equals = lynx_level_equals
+};
