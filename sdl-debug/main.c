@@ -22,7 +22,7 @@ static Level* level;
 static TWSMetadata* solution;
 static GameInputList input_list;
 static uint32_t tick = 0;
-static size_t level_num = 22 - 1;
+static size_t level_num = 23 - 1;
 
 #define TILE_SIZE 32
 #define GRID_WIDTH 32
@@ -142,7 +142,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     SDL_DestroySurface(surface);  /* done with this, the texture has a copy of the pixels now. */
 
-    Result_LevelTwsPair pair = loadsets(CCLP5_voting_Broadcast_ccl, sizeof(CCLP5_voting_Broadcast_ccl), CCLP5_voting_Broadcast_ms_tws, sizeof(CCLP5_voting_Broadcast_ms_tws));
+    Result_LevelTwsPair pair = loadsets(CID_PatchTests_ccl, sizeof(CID_PatchTests_ccl), CID_PatchTests_ms_tws, sizeof(CID_PatchTests_ms_tws));
     levelset = pair.value.set;
     twsset = pair.value.tws;
 
