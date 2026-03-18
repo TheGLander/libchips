@@ -31,6 +31,9 @@ bool TileID_is_actor(TileID id) {
 bool TileID_is_animation(TileID id) {
   return id >= Water_Splash && id <= Animation_Reserved1;
 }
+bool TileID_is_block(TileID id) {
+  return id == Block_Static || TileID_actor_get_id(id) == Block;
+}
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;
 }
@@ -55,6 +58,18 @@ Direction TileID_actor_get_dir(TileID id) {
 }
 Direction TileID_actor_get_id(TileID id) {
   return id & ~3;
+}
+
+Position Position_from_xy(int16_t x, int16_t y) {
+  return y * MAP_WIDTH + x;
+}
+
+int16_t Position_get_x(Position self) {
+  return self % MAP_WIDTH;
+}
+
+int16_t Position_get_y(Position self) {
+  return self / MAP_WIDTH;
 }
 
 static int8_t const direction_offsets[] = {0, -MAP_WIDTH, -1, 0, +MAP_WIDTH,
@@ -182,6 +197,9 @@ TileID Level_get_bottom_terrain(Level const* self, Position pos) {
 }
 Actor* Level_get_actors_ptr(Level* self) {
   return self->actors;
+}
+uint32_t Level_get_actors_n(Level const* self) {
+  return self->ruleset->level_get_actors_n(self);
 }
 Actor* Level_get_actor_by_idx(Level* self, uint32_t idx) {
   return &self->actors[idx];

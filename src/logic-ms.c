@@ -34,7 +34,7 @@ static void Actor_set_spare_direction(Actor* self, Direction dir) {
 }
 
 static Direction Actor_get_spare_direction(Actor const* self) {
-  return self->state & CS_SDIRMASK >> CS_SDIRSHIFT;
+  return (self->state & CS_SDIRMASK) >> CS_SDIRSHIFT;
 }
 
 /* Including the flag CMM_NOLEAVECHECK in a call to canmakemove()
@@ -2162,10 +2162,15 @@ static bool ms_level_equals(Level const* self, Level const* other) {
   return true;
 }
 
+uint32_t ms_level_get_actors_n(Level const* self) {
+  return self->ms_state.actor_count;
+}
+
 Ruleset const ms_logic = {.id = Ruleset_MS,
                           .init_level = ms_init_level,
                           .tick_level = ms_tick_level,
                           .uninit_level = ms_uninit_level,
                           .add_hash_level = ms_hash_level,
-                          .level_equals = ms_level_equals
+                          .level_equals = ms_level_equals,
+                          .level_get_actors_n = ms_level_get_actors_n,
 };

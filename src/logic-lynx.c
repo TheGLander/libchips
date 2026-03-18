@@ -1525,10 +1525,15 @@ static bool lynx_level_equals(Level const* self, Level const* other) {
   return true;
 }
 
+uint32_t lynx_level_get_actors_n(Level const* self) {
+  return self->lx_state.last_actor - self->actors + 1;
+}
+
 Ruleset const lynx_logic = {.id = Ruleset_Lynx,
                             .init_level = lynx_init_level,
                             .tick_level = lynx_tick_level,
                             .uninit_level = lynx_uninit_level,
                             .add_hash_level = lynx_hash_level,
-                            .level_equals = lynx_level_equals
+                            .level_equals = lynx_level_equals,
+                            .level_get_actors_n = lynx_level_get_actors_n,
 };

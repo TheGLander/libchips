@@ -137,6 +137,7 @@ bool TileID_is_ms_special(TileID id);
 bool TileID_is_terrain(TileID id);
 bool TileID_is_actor(TileID id);
 bool TileID_is_animation(TileID id);
+bool TileID_is_block(TileID id);
 
 typedef int16_t Position;
 enum { POSITION_NULL = -1 };
@@ -160,6 +161,9 @@ Direction TileID_actor_get_dir(TileID id);
 Direction TileID_actor_get_id(TileID id);
 bool Direction_is_diagonal(Direction dir);
 
+Position Position_from_xy(int16_t x, int16_t y);
+int16_t Position_get_x(Position self);
+int16_t Position_get_y(Position self);
 Position Position_neighbor(Position self, Direction dir);
 
 typedef uint16_t GameInput;
@@ -282,6 +286,7 @@ typedef struct Ruleset {
   void (*uninit_level)(Level*);
   void (*add_hash_level)(Level const*, hash_t*);
   bool (*level_equals)(Level const*, Level const*);
+  uint32_t (*level_get_actors_n)(Level const*);
 } Ruleset;
 RulesetID Ruleset_get_id(const Ruleset* self);
 
@@ -336,6 +341,7 @@ Prng const* Level_get_prng_const_ptr(Level const* self);
 TileID Level_get_top_terrain(Level const* self, Position pos);
 TileID Level_get_bottom_terrain(Level const* self, Position pos);
 Actor* Level_get_actors_ptr(Level* self);
+uint32_t Level_get_actors_n(Level const* self);
 Actor* Level_get_actor_by_idx(Level* self, uint32_t idx);
 Actor* Level_get_chip_actor(Level* self);
 Actor const* Level_get_actors_const_ptr(Level const* self);
