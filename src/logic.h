@@ -248,7 +248,6 @@ typedef struct MsSlipper {
 } MsSlipper;
 
 typedef struct MsState {
-  uint32_t actor_count;
   uint32_t slip_count;
   uint32_t mscc_slippers; // transient field, reset each tick
   uint8_t chip_ticks_since_moved;
@@ -264,7 +263,6 @@ typedef struct MsState {
 typedef struct LxState {
   bool pedantic_mode;
   Actor* chip_colliding_actor;
-  Actor* last_actor;
   Position chip_predicted_pos;
   Position to_place_wall_pos;
   uint8_t prng1;
@@ -286,7 +284,6 @@ typedef struct Ruleset {
   void (*uninit_level)(Level*);
   void (*add_hash_level)(Level const*, hash_t*);
   bool (*level_equals)(Level const*, Level const*);
-  uint32_t (*level_get_actors_n)(Level const*);
 } Ruleset;
 RulesetID Ruleset_get_id(const Ruleset* self);
 
@@ -305,6 +302,7 @@ typedef struct Level {
   uint32_t current_tick;
   uint16_t chips_left;
   Position camera_pos;
+  uint32_t actor_count;
   uint8_t player_keys[4];
   uint8_t player_boots[4];
   // `lastmove`?

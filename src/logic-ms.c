@@ -452,12 +452,12 @@ static void Level_toggle_walls(Level* level) {
  * Functions that manage the list of entities.
  */
 
-static Actor* Level_create_actor(Level* level) {
-  if (level->ms_state.actor_count == MAX_CREATURES) {
-    warn("%d: Actor array full (NOTE: THIS SHOULD NOT BE POSSIBLE)", level->current_tick);
+static Actor* Level_create_actor(Level* self) {
+  if (self->actor_count == MAX_CREATURES) {
+    warn("%d: Actor array full (NOTE: THIS SHOULD NOT BE POSSIBLE)", self->current_tick);
     return NULL;
   }
-  Actor* actor = &level->actors[level->ms_state.actor_count];
+  Actor* actor = &self->actors[self->actor_count];
   *actor = (Actor){.pos = POSITION_NULL,
                    .id = Nothing,
                    .direction = DIRECTION_NIL,
@@ -467,7 +467,7 @@ static Actor* Level_create_actor(Level* level) {
                    .state = 0,
                    .move_decision = DIRECTION_NIL,};
 
-  level->ms_state.actor_count += 1;
+  self->actor_count += 1;
   return actor;
 }
 
@@ -479,7 +479,7 @@ static Actor* Level_look_up_creature(Level* self,
                                      bool includechip) {
   if (!self->actors)
     return NULL;
-  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actor_count; n += 1) {
     if (self->actors[n].hidden)
       continue;
     if (self->actors[n].pos == pos)
@@ -493,7 +493,7 @@ static Actor* Level_look_up_creature(Level* self,
  * currently "active", it is automatically added to the block list.
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
-  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actor_count; n += 1) {
     if (self->actors[n].id == Block && self->actors[n].pos == pos
         && !self->actors[n].hidden) {
       return &self->actors[n];
@@ -597,7 +597,7 @@ static void Actor_remove(Actor* self, Level* level) {
  * process of moving at the time is given special treatment.)
  */
 static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
-  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actor_count; n += 1) {
     Actor* actor = &self->actors[n]; /* convenience, Tank Top Glitch */
     if (actor->hidden || actor->id != Tank)
       continue;
@@ -1893,7 +1893,7 @@ static void Level_do_floor_movements(Level* self) { /* split version with patch 
 }
 
 static void Level_create_clones(Level* self) {
-  for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actor_count; n += 1) {
     if (self->actors[n].state & CS_CLONING) {
       self->actors[n].state &= ~CS_CLONING;
     }
@@ -1902,16 +1902,16 @@ static void Level_create_clones(Level* self) {
 
 static void Level_check_and_clear_actors(Level* self) {
   // WIDTH * HEIGHT + 1 so that it's ensured it won't fire unless we're well over max possible alive creatures
-  if (self->ms_state.actor_count <= MAP_WIDTH * MAP_HEIGHT + 1) {
+  if (self->actor_count <= MAP_WIDTH * MAP_HEIGHT + 1) {
     return;
   }
   // warn("%d: filled the actor array, removing dead creatures", self->current_tick);
   size_t i = 0;
-  while (i < self->ms_state.actor_count) {
+  while (i < self->actor_count) {
     Actor* actor = &self->actors[i];
     if (actor->hidden) {
-      memmove(&self->actors[i], &self->actors[i + 1], (self->ms_state.actor_count - i - 1) * sizeof(Actor));
-      self->ms_state.actor_count -= 1;
+      memmove(&self->actors[i], &self->actors[i + 1], (self->actor_count - i - 1) * sizeof(Actor));
+      self->actor_count -= 1;
       for (size_t j = 0; j < self->ms_state.slip_count; j += 1) { // Adjust sliplist entries
         MsSlipper* slipper = &self->ms_state.slip_list[j];
         if (slipper->actor - self->actors >= i) {
@@ -1925,7 +1925,7 @@ static void Level_check_and_clear_actors(Level* self) {
 }
 
 static bool ms_init_level(Level* self) {
-  self->ms_state.actor_count = 0;
+  self->actor_count = 0;
   memset(self->actors, 0, sizeof(self->actors));
   self->ms_state.slip_count = 0;
   memset(self->ms_state.slip_list, 0, sizeof(self->ms_state.slip_list));
@@ -2024,7 +2024,7 @@ static void ms_tick_level(Level* self) {
   self->timer_offset = -1;
 
   if (!(self->current_tick & 3)) {
-    for (uint32_t n = 1; n < self->ms_state.actor_count; n += 1) {
+    for (uint32_t n = 1; n < self->actor_count; n += 1) {
       if (self->actors[n].state & CS_TURNING) {
         self->actors[n].state &= ~(CS_TURNING | CS_HASMOVED);
         Actor_update_floor(&self->actors[n], self);
@@ -2046,7 +2046,7 @@ static void ms_tick_level(Level* self) {
 
   if (self->current_tick && !(self->current_tick & 1)) {
     self->ms_state.controller_dir = DIRECTION_NIL;
-    for (uint32_t n = 0; n < self->ms_state.actor_count; n += 1) {
+    for (uint32_t n = 0; n < self->actor_count; n += 1) {
       Actor* cr = &self->actors[n];
       if (!cr->hidden && cr->id != Chip && !(self->current_tick & 3) &&
           self->ms_state.chip_status == CHIP_SQUISHED && !self->level_complete) {
@@ -2106,10 +2106,6 @@ static void ms_uninit_level(Level* level) {
 }
 
 static void ms_hash_level(Level const* self, hash_t* hash) {
-  *hash = hash_scalar(self->ms_state.actor_count, *hash);
-  for (size_t i = 0; i < self->ms_state.actor_count; i += 1) {
-    Actor_add_hash(&self->actors[i], hash);
-  }
   *hash = hash_scalar(self->ms_state.slip_count, *hash);
   for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
     MsSlipper const* slipper = &self->ms_state.slip_list[i];
@@ -2127,8 +2123,6 @@ static void ms_hash_level(Level const* self, hash_t* hash) {
 static bool ms_level_equals(Level const* self, Level const* other) {
   if (self == other)
     return true;
-  if (self->ms_state.actor_count != other->ms_state.actor_count)
-    return false;
   if (self->ms_state.slip_count != other->ms_state.slip_count)
     return false;
   if (self->ms_state.chip_ticks_since_moved != other->ms_state.chip_ticks_since_moved)
@@ -2141,11 +2135,6 @@ static bool ms_level_equals(Level const* self, Level const* other) {
     return false;
   if (self->ms_state.controller_dir != other->ms_state.controller_dir)
     return false;
-  for (size_t i = 0; i < self->ms_state.actor_count; i += 1) {
-    if (!Actor_equals(&self->actors[i], &other->actors[i])) {
-      return false;
-    }
-  }
   for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
     MsSlipper const* slipper_self = &self->ms_state.slip_list[i];
     MsSlipper const* slipper_other = &other->ms_state.slip_list[i];
@@ -2162,15 +2151,10 @@ static bool ms_level_equals(Level const* self, Level const* other) {
   return true;
 }
 
-uint32_t ms_level_get_actors_n(Level const* self) {
-  return self->ms_state.actor_count;
-}
-
 Ruleset const ms_logic = {.id = Ruleset_MS,
                           .init_level = ms_init_level,
                           .tick_level = ms_tick_level,
                           .uninit_level = ms_uninit_level,
                           .add_hash_level = ms_hash_level,
                           .level_equals = ms_level_equals,
-                          .level_get_actors_n = ms_level_get_actors_n,
 };
