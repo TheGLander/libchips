@@ -183,14 +183,14 @@ namespace {
     LevelSet_free(set);
   }
 
-  TEST(FormatTws, EmptyFile) {
+  TEST(FormatCCL, EmptyFile) {
     uint8_t data[0];
     Result_LevelSetPtr ccl = parse_ccl(data, 0);
     ASSERT_FALSE(ccl.success);
     free(ccl.error);
   }
 
-  TEST(FormatTws, NullFile) {
+  TEST(FormatCCL, NullFile) {
     Result_LevelSetPtr ccl = parse_ccl(NULL, 100);
     ASSERT_FALSE(ccl.success);
     free(ccl.error);
