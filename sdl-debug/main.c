@@ -22,7 +22,7 @@ static Level* level;
 static TWSMetadata* solution;
 static GameInputList input_list;
 static uint32_t tick = 0;
-static size_t level_num = 23 - 1;
+static size_t level_num = 1;
 
 #define TILE_SIZE 32
 #define GRID_WIDTH 32
@@ -69,21 +69,21 @@ void make_level_solution() {
     }
 
     Ruleset const* logic;
-    if (twsset->ruleset == Ruleset_MS) {
+    if (TWSSet_get_ruleset(twsset) == Ruleset_MS) {
         logic = &ms_logic;
     } else {
         logic = &lynx_logic;
     }
-    Result_LevelPtr level_res = LevelMetadata_make_level(&levelset->levels[level_num], logic);
+    Result_LevelPtr level_res = LevelMetadata_make_level(LevelSet_get_level(levelset, level_num - 1), logic);
     if (!level_res.success) {
         eprintf("%s\n", level_res.error);
         free(level_res.error);
         return;
     }
     level = level_res.value;
-    SDL_SetWindowTitle(window, levelset->levels[level_num].title);
+    SDL_SetWindowTitle(window, LevelMetadata_get_title(LevelSet_get_level(levelset, level_num - 1)));
 
-    solution = &twsset->solutions[level_num];
+    solution = TWSSet_get_solution_by_level_num(twsset, level_num);
     Result_GameInputList input_list_res = TWSMetadata_prepare_inputs(solution);
     if (!input_list_res.success) {
         eprintf("%s\n", input_list_res.error);
@@ -92,9 +92,9 @@ void make_level_solution() {
     }
     input_list = input_list_res.value;
 
-    Level_set_init_step_parity(level, solution->init_step_parity);
-    Level_set_rff_dir(level, solution->rff_dir);
-    Prng_init_seeded(Level_get_prng_ptr(level), solution->prng_seed);
+    Level_set_init_step_parity(level, TWSMetadata_get_step(solution));
+    Level_set_rff_dir(level, TWSMetadata_get_slide_dir(solution));
+    Prng_init_seeded(Level_get_prng_ptr(level), TWSMetadata_get_prng_seed(solution));
 }
 
 /* This function runs once at startup. */
@@ -210,7 +210,7 @@ static SDL_AppResult handle_key_event(SDL_Scancode key_code, SDL_Keymod keymod) 
             make_level_solution();
             break;
         case SDL_SCANCODE_N:
-            if (level_num >= levelset->levels_n)
+            if (level_num >= LevelSet_get_levels_n(levelset))
                 break;
             level_num++;
             make_level_solution();
@@ -241,7 +241,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 #define	_EAST	+ 3
 
 typedef	struct tileidinfo {
-    int		id;		/* the tile ID */
+    TileID		id;		/* the tile ID */
     signed char	xopaque;	/* the coordinates of the opaque image */
     signed char	yopaque;	/*   (expressed in tiles, not pixels) */
     signed char	xtransp;	/* coordinates of the transparent image */
@@ -412,9 +412,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             dst_rect.y = (y * TILE_SIZE);
 
             uint32_t pos = x + y * GRID_WIDTH;
-            MapCell cell = level->map[pos];
-            tileidinfo top_info = get_tileidinfo(cell.top.id);
-            tileidinfo bot_info = get_tileidinfo(cell.bottom.id);
+            tileidinfo top_info = get_tileidinfo(Level_get_top_terrain(level, pos));
+            tileidinfo bot_info = get_tileidinfo(Level_get_bottom_terrain(level, pos));
 
             src_rect.x = bot_info.xopaque * TILE_SIZE;
             src_rect.y = bot_info.yopaque * TILE_SIZE;
@@ -425,9 +424,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             SDL_RenderTexture(renderer, texture, &src_rect, &dst_rect);
         }
     }
-    if (twsset->ruleset == Ruleset_Lynx) {
+    if (Level_get_ruleset(level)->id == Ruleset_Lynx) {
         Actor* actors = Level_get_actors_ptr(level);
-        for (Actor* actor = actors; actor->id != Nothing; actor += 1) {
+        for (Actor* actor = actors; Actor_get_id(actor) != Nothing; actor += 1) {
             if (Actor_get_hidden(actor) && Actor_get_id(actor) != Chip)
                 continue;
 
