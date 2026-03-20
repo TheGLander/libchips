@@ -87,7 +87,7 @@ static inline Actor* Level_get_chip(Level* self) {
   return &self->actors[0];
 }
 static inline Actor* Level_get_last_actor(Level* self) {
-  return &self->actors[self->actor_count - 1];
+  return &self->actors[self->actors_n - 1];
 }
 static inline bool Level_in_endgame(Level const* self) {
   return self->lx_state.endgame_timer > 0;
@@ -121,7 +121,7 @@ static void Level_stop_terrain_sfx(Level* level) {
 
 static bool lynx_init_level(Level* self) {
   memset(self->actors, 0, sizeof(Actor) * MAX_CREATURES);
-  self->actor_count = 0;
+  self->actors_n = 0;
   Actor* chip = NULL;
   if (self->lx_state.pedantic_mode && self->status_flags & SF_BAD_TILES) {
     self->status_flags |= SF_INVALID;
@@ -156,8 +156,8 @@ static bool lynx_init_level(Level* self) {
     }
     // Create actors
     if (TileID_is_actor(cell->top.id)) {
-      Actor* actor = &self->actors[self->actor_count];
-      self->actor_count += 1;
+      Actor* actor = &self->actors[self->actors_n];
+      self->actors_n += 1;
       actor->pos = pos;
       actor->id = TileID_actor_get_id(cell->top.id);
       actor->direction = TileID_actor_get_dir(cell->top.id);
@@ -193,8 +193,8 @@ static bool lynx_init_level(Level* self) {
   if (!chip) {
     // warn("level %d: Chip isn't on the map!", num);
     self->status_flags |= SF_INVALID;
-    chip = &self->actors[self->actor_count];
-    self->actor_count += 1;
+    chip = &self->actors[self->actors_n];
+    self->actors_n += 1;
     chip->pos = 0;
     chip->hidden = true;
   }
@@ -279,7 +279,7 @@ static void Actor_erase_animation(Actor* self, Level* level) {
   Level_cell_remove_animation(level, self->pos);
   if (self == Level_get_last_actor(level)) {
     self->id = Nothing;
-    level->actor_count -= 1;
+    level->actors_n -= 1;
   }
 }
 
@@ -465,7 +465,7 @@ static Actor* Level_find_actor(Level* self, Position pos, uint8_t flags) {
   if (flags & FA_NO_CHIP) {
     i += 1;
   }
-  for (; i < self->actor_count; i++) {
+  for (; i < self->actors_n; i++) {
     Actor* actor = &self->actors[i];
     if (actor->pos == pos && !actor->hidden &&
         ((bool)(flags & FA_ANIMS) == TileID_is_animation(actor->id))) {
@@ -687,10 +687,10 @@ static Position Level_find_connected_cell(Level const* self,
 static TriRes Actor_advance_movement(Actor* self, Level* level, bool releasing);
 
 static Actor* Actor_new(Level* level) {
-  Actor* actor = level->actors; // Set intentionally in the event there's no creatures beyond chip
+  Actor* actor = &level->actors[0]; // Set intentionally in the event there's no creatures beyond Chip
   // The +1 after the loop will then set it to be the next after him
 
-  for (uint32_t i = 1; i < level->actor_count; i++) {
+  for (uint32_t i = 1; i < level->actors_n; i++) {
     actor = &level->actors[i];
     if (actor->hidden)
       return actor;
@@ -705,7 +705,7 @@ static Actor* Actor_new(Level* level) {
   if (level->lx_state.pedantic_mode && actors_used >= PEDANTIC_MAX_CREATURES)
     return NULL;
   actor->hidden = true;
-  level->actor_count += 1;
+  level->actors_n += 1;
   return actor;
 }
 
@@ -742,7 +742,7 @@ static bool Level_activate_cloner(Level* self, Position pos) {
 }
 
 static void Level_turn_tanks(Level* self) {
-  for (uint32_t i = 1; i < self->actor_count; i++) {
+  for (uint32_t i = 1; i < self->actors_n; i++) {
     Actor* actor = &self->actors[i];
     if (actor->hidden || actor->id != Tank)
       continue;
@@ -1311,7 +1311,7 @@ static void lynx_tick_level(Level* self) {
       Level_remove_chip(self, CHIP_OUTOFTIME, NULL);
     }
   }
-  for (uint32_t i = 0; i < self->actor_count; i += 1) {
+  for (uint32_t i = 0; i < self->actors_n; i += 1) {
     Actor* actor = &self->actors[i];
     if (actor->hidden || !(actor->state & CS_REVERSE))
       continue;
@@ -1320,7 +1320,7 @@ static void lynx_tick_level(Level* self) {
       actor->direction = Direction_back(actor->direction);
     }
   }
-  for (uint32_t i = 0; i < self->actor_count; i += 1) {
+  for (uint32_t i = 0; i < self->actors_n; i += 1) {
     Actor* actor = &self->actors[i];
     if (!(actor->state & CS_PUSHED))
       continue;
@@ -1342,7 +1342,7 @@ static void lynx_tick_level(Level* self) {
   self->lx_state.chip_predicted_pos = POSITION_NULL;
   self->lx_state.chip_colliding_actor = NULL;
   // Decision/intent phase: all actors decide which direction to go in
-  for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
+  for (ptrdiff_t i = self->actors_n - 1; i >= 0; i -= 1) {
     Actor* actor = &self->actors[i];
     if (actor != chip && actor->hidden)
       continue;
@@ -1351,7 +1351,7 @@ static void lynx_tick_level(Level* self) {
     Actor_do_decision(actor, self);
   }
   // Movement phase: all actors try to move in their predetermined directions
-  for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
+  for (ptrdiff_t i = self->actors_n - 1; i >= 0; i -= 1) {
     Actor* actor = &self->actors[i];
     if (actor == chip && self->level_complete)
       continue;
@@ -1378,7 +1378,7 @@ static void lynx_tick_level(Level* self) {
     }
   }
   // Teleport phase: teleport actors on teleports
-  for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
+  for (ptrdiff_t i = self->actors_n - 1; i >= 0; i -= 1) {
     Actor* actor = &self->actors[i];
     if (actor->hidden || Actor_is_moving(actor))
       continue;

@@ -263,7 +263,7 @@ static TriRes Level_check_for_ending(Level* self) {
 /* Empty the list of sliding creatures.
  */
 static void Level_reset_sliplist(Level* self) {
-  self->ms_state.slip_count = 0;
+  self->ms_state.slips_n = 0;
 }
 
 /* Append the given creature to the end of the slip list.
@@ -271,16 +271,16 @@ static void Level_reset_sliplist(Level* self) {
 static Actor* Level_append_to_slip_list(Level* self,
                                         Actor* actor,
                                         Direction direction) {
-  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1) {
+  for (uint32_t n = 0; n < self->ms_state.slips_n; n += 1) {
     if (self->ms_state.slip_list[n].actor == actor) {
       self->ms_state.slip_list[n].direction = direction;
       return actor;
     }
   }
 
-  self->ms_state.slip_list[self->ms_state.slip_count].actor = actor;
-  self->ms_state.slip_list[self->ms_state.slip_count].direction = direction;
-  self->ms_state.slip_count += 1;
+  self->ms_state.slip_list[self->ms_state.slips_n].actor = actor;
+  self->ms_state.slip_list[self->ms_state.slips_n].direction = direction;
+  self->ms_state.slips_n += 1;
   self->ms_state.mscc_slippers += 1; /* new accounting */
   return actor;
 }
@@ -290,14 +290,14 @@ static Actor* Level_append_to_slip_list(Level* self,
 static Actor* Level_prepend_to_slip_list(Level* self,
                                          Actor* actor,
                                          Direction direction) {
-  if (self->ms_state.slip_count && self->ms_state.slip_list[0].actor == actor) {
+  if (self->ms_state.slips_n && self->ms_state.slip_list[0].actor == actor) {
     self->ms_state.slip_list[0].direction = direction;
     return actor;
   }
 
-  for (uint32_t n = self->ms_state.slip_count; n; n -= 1)
+  for (uint32_t n = self->ms_state.slips_n; n; n -= 1)
     self->ms_state.slip_list[n] = self->ms_state.slip_list[n - 1];
-  self->ms_state.slip_count += 1;
+  self->ms_state.slips_n += 1;
   self->ms_state.slip_list[0].actor = actor;
   self->ms_state.slip_list[0].direction = direction;
   return actor;
@@ -307,7 +307,7 @@ static Actor* Level_prepend_to_slip_list(Level* self,
  */
 static Direction Level_get_actor_slip_dir(Level const* self,
                                           Actor const* actor) {
-  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1)
+  for (uint32_t n = 0; n < self->ms_state.slips_n; n += 1)
     if (self->ms_state.slip_list[n].actor == actor)
       return self->ms_state.slip_list[n].direction;
   return DIRECTION_NIL;
@@ -318,16 +318,16 @@ static Direction Level_get_actor_slip_dir(Level const* self,
 static void Level_remove_actor_from_slip_list(Level* self, Actor const* actor) {
   uint32_t n;
 
-  for (n = 0; n < self->ms_state.slip_count; n += 1) {
+  for (n = 0; n < self->ms_state.slips_n; n += 1) {
     if (self->ms_state.slip_list[n].actor == actor) {
       break;
     }
   }
-  if (n == self->ms_state.slip_count) {
+  if (n == self->ms_state.slips_n) {
     return;
   }
-  self->ms_state.slip_count -= 1;
-  for (; n < self->ms_state.slip_count; n += 1) {
+  self->ms_state.slips_n -= 1;
+  for (; n < self->ms_state.slips_n; n += 1) {
     self->ms_state.slip_list[n] = self->ms_state.slip_list[n + 1];
   }
 }
@@ -453,11 +453,11 @@ static void Level_toggle_walls(Level* level) {
  */
 
 static Actor* Level_create_actor(Level* self) {
-  if (self->actor_count == MAX_CREATURES) {
+  if (self->actors_n == MAX_CREATURES) {
     warn("%d: Actor array full (NOTE: THIS SHOULD NOT BE POSSIBLE)", self->current_tick);
     return NULL;
   }
-  Actor* actor = &self->actors[self->actor_count];
+  Actor* actor = &self->actors[self->actors_n];
   *actor = (Actor){.pos = POSITION_NULL,
                    .id = Nothing,
                    .direction = DIRECTION_NIL,
@@ -467,7 +467,7 @@ static Actor* Level_create_actor(Level* self) {
                    .state = 0,
                    .move_decision = DIRECTION_NIL,};
 
-  self->actor_count += 1;
+  self->actors_n += 1;
   return actor;
 }
 
@@ -479,7 +479,7 @@ static Actor* Level_look_up_creature(Level* self,
                                      bool includechip) {
   if (!self->actors)
     return NULL;
-  for (uint32_t n = 0; n < self->actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actors_n; n += 1) {
     if (self->actors[n].hidden)
       continue;
     if (self->actors[n].pos == pos)
@@ -493,7 +493,7 @@ static Actor* Level_look_up_creature(Level* self,
  * currently "active", it is automatically added to the block list.
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
-  for (uint32_t n = 0; n < self->actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actors_n; n += 1) {
     if (self->actors[n].id == Block && self->actors[n].pos == pos
         && !self->actors[n].hidden) {
       return &self->actors[n];
@@ -597,7 +597,7 @@ static void Actor_remove(Actor* self, Level* level) {
  * process of moving at the time is given special treatment.)
  */
 static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
-  for (uint32_t n = 0; n < self->actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actors_n; n += 1) {
     Actor* actor = &self->actors[n]; /* convenience, Tank Top Glitch */
     if (actor->hidden || actor->id != Tank)
       continue;
@@ -685,9 +685,9 @@ static void Actor_end_floor_movement(Actor* self, Level* level) {
 /* Clean out deadwood entries in the slip list.
  */
 static void Level_update_sliplist(Level* self) {
-  if (self->ms_state.slip_count == 0)
+  if (self->ms_state.slips_n == 0)
     return;
-  for (int64_t n = self->ms_state.slip_count - 1; n >= 0; n -= 1) {
+  for (int64_t n = self->ms_state.slips_n - 1; n >= 0; n -= 1) {
     if (!(self->ms_state.slip_list[n].actor->state & (CS_SLIP | CS_SLIDE))) {
       Actor_end_floor_movement(self->ms_state.slip_list[n].actor, self);
     }
@@ -1786,7 +1786,7 @@ static bool Actor_advance_movement(Actor* self, Level* level, Direction dir) {
  * implemented.)
  */
 static void Level_chip_floor_movements(Level* self) { /* split into two */
-  for (uint32_t n = 0; n < self->ms_state.slip_count; n += 1) {
+  for (uint32_t n = 0; n < self->ms_state.slips_n; n += 1) {
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (!(actor->state & (CS_SLIP | CS_SLIDE)))
       continue;
@@ -1832,7 +1832,7 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
 static void Level_non_chip_floor_movements(Level* self) { /* split into two */
   int64_t advance = 0;
 
-  for (uint32_t n = 0; n < self->ms_state.slip_count;) {
+  for (uint32_t n = 0; n < self->ms_state.slips_n;) {
     uint32_t oldmsccslippers = self->ms_state.mscc_slippers;
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (actor->id == Chip) {
@@ -1893,7 +1893,7 @@ static void Level_do_floor_movements(Level* self) { /* split version with patch 
 }
 
 static void Level_create_clones(Level* self) {
-  for (uint32_t n = 0; n < self->actor_count; n += 1) {
+  for (uint32_t n = 0; n < self->actors_n; n += 1) {
     if (self->actors[n].state & CS_CLONING) {
       self->actors[n].state &= ~CS_CLONING;
     }
@@ -1902,17 +1902,17 @@ static void Level_create_clones(Level* self) {
 
 static void Level_check_and_clear_actors(Level* self) {
   // WIDTH * HEIGHT + 1 so that it's ensured it won't fire unless we're well over max possible alive creatures
-  if (self->actor_count <= MAP_WIDTH * MAP_HEIGHT + 1) {
+  if (self->actors_n <= MAP_WIDTH * MAP_HEIGHT + 1) {
     return;
   }
   // warn("%d: filled the actor array, removing dead creatures", self->current_tick);
   size_t i = 0;
-  while (i < self->actor_count) {
+  while (i < self->actors_n) {
     Actor* actor = &self->actors[i];
     if (actor->hidden) {
-      memmove(&self->actors[i], &self->actors[i + 1], (self->actor_count - i - 1) * sizeof(Actor));
-      self->actor_count -= 1;
-      for (size_t j = 0; j < self->ms_state.slip_count; j += 1) { // Adjust sliplist entries
+      memmove(&self->actors[i], &self->actors[i + 1], (self->actors_n - i - 1) * sizeof(Actor));
+      self->actors_n -= 1;
+      for (size_t j = 0; j < self->ms_state.slips_n; j += 1) { // Adjust sliplist entries
         MsSlipper* slipper = &self->ms_state.slip_list[j];
         if (slipper->actor - self->actors >= i) {
           slipper->actor -= 1;
@@ -1925,9 +1925,9 @@ static void Level_check_and_clear_actors(Level* self) {
 }
 
 static bool ms_init_level(Level* self) {
-  self->actor_count = 0;
+  self->actors_n = 0;
   memset(self->actors, 0, sizeof(self->actors));
-  self->ms_state.slip_count = 0;
+  self->ms_state.slips_n = 0;
   memset(self->ms_state.slip_list, 0, sizeof(self->ms_state.slip_list));
 
   self->status_flags &= ~SF_BAD_TILES;
@@ -2024,7 +2024,7 @@ static void ms_tick_level(Level* self) {
   self->timer_offset = -1;
 
   if (!(self->current_tick & 3)) {
-    for (uint32_t n = 1; n < self->actor_count; n += 1) {
+    for (uint32_t n = 1; n < self->actors_n; n += 1) {
       if (self->actors[n].state & CS_TURNING) {
         self->actors[n].state &= ~(CS_TURNING | CS_HASMOVED);
         Actor_update_floor(&self->actors[n], self);
@@ -2040,13 +2040,13 @@ static void ms_tick_level(Level* self) {
     }
   }
 
-  self->ms_state.mscc_slippers = self->ms_state.slip_count;
+  self->ms_state.mscc_slippers = self->ms_state.slips_n;
   if (Level_get_chip(self)->state & (CS_SLIP | CS_SLIDE)) /* new accounting */
     self->ms_state.mscc_slippers -= 1;
 
   if (self->current_tick && !(self->current_tick & 1)) {
     self->ms_state.controller_dir = DIRECTION_NIL;
-    for (uint32_t n = 0; n < self->actor_count; n += 1) {
+    for (uint32_t n = 0; n < self->actors_n; n += 1) {
       Actor* cr = &self->actors[n];
       if (!cr->hidden && cr->id != Chip && !(self->current_tick & 3) &&
           self->ms_state.chip_status == CHIP_SQUISHED && !self->level_complete) {
@@ -2106,8 +2106,8 @@ static void ms_uninit_level(Level* level) {
 }
 
 static void ms_hash_level(Level const* self, hash_t* hash) {
-  *hash = hash_scalar(self->ms_state.slip_count, *hash);
-  for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
+  *hash = hash_scalar(self->ms_state.slips_n, *hash);
+  for (size_t i = 0; i < self->ms_state.slips_n; i += 1) {
     MsSlipper const* slipper = &self->ms_state.slip_list[i];
     ptrdiff_t const actor_index = slipper->actor - self->actors;
     hash_t slipper_hash = hash_scalar(actor_index, *hash);
@@ -2123,7 +2123,7 @@ static void ms_hash_level(Level const* self, hash_t* hash) {
 static bool ms_level_equals(Level const* self, Level const* other) {
   if (self == other)
     return true;
-  if (self->ms_state.slip_count != other->ms_state.slip_count)
+  if (self->ms_state.slips_n != other->ms_state.slips_n)
     return false;
   if (self->ms_state.chip_ticks_since_moved != other->ms_state.chip_ticks_since_moved)
     return false;
@@ -2135,7 +2135,7 @@ static bool ms_level_equals(Level const* self, Level const* other) {
     return false;
   if (self->ms_state.controller_dir != other->ms_state.controller_dir)
     return false;
-  for (size_t i = 0; i < self->ms_state.slip_count; i += 1) {
+  for (size_t i = 0; i < self->ms_state.slips_n; i += 1) {
     MsSlipper const* slipper_self = &self->ms_state.slip_list[i];
     MsSlipper const* slipper_other = &other->ms_state.slip_list[i];
     ptrdiff_t const actor_index_self = slipper_self->actor - self->actors;

@@ -248,7 +248,7 @@ typedef struct MsSlipper {
 } MsSlipper;
 
 typedef struct MsState {
-  uint32_t slip_count;
+  uint32_t slips_n;
   uint32_t mscc_slippers; // transient field, reset each tick
   uint8_t chip_ticks_since_moved;
   ChipStatus chip_status;
@@ -302,7 +302,7 @@ typedef struct Level {
   uint32_t current_tick;
   uint16_t chips_left;
   Position camera_pos;
-  uint32_t actor_count;
+  uint32_t actors_n;
   uint8_t player_keys[4];
   uint8_t player_boots[4];
   // `lastmove`?
