@@ -466,9 +466,10 @@ static Actor* Level_find_actor(Level* self, Position pos, uint8_t flags) {
     i += 1;
   }
   for (; i < self->actor_count; i++) {
-    if (self->actors[i].pos == pos && !self->actors[i].hidden &&
-        ((bool)(flags & FA_ANIMS) == TileID_is_animation(self->actors[i].id))) {
-      return &self->actors[i];
+    Actor* actor = &self->actors[i];
+    if (actor->pos == pos && !actor->hidden &&
+        ((bool)(flags & FA_ANIMS) == TileID_is_animation(actor->id))) {
+      return actor;
     }
   }
   return NULL;
@@ -686,7 +687,8 @@ static Position Level_find_connected_cell(Level const* self,
 static TriRes Actor_advance_movement(Actor* self, Level* level, bool releasing);
 
 static Actor* Actor_new(Level* level) {
-  Actor* actor = level->actors + 1;
+  Actor* actor = level->actors; // Set intentionally in the event there's no creatures beyond chip
+  // The +1 after the loop will then set it to be the next after him
 
   for (uint32_t i = 1; i < level->actor_count; i++) {
     actor = &level->actors[i];
@@ -741,12 +743,13 @@ static bool Level_activate_cloner(Level* self, Position pos) {
 
 static void Level_turn_tanks(Level* self) {
   for (uint32_t i = 1; i < self->actor_count; i++) {
-    if (self->actors[i].hidden || self->actors[i].id != Tank)
+    Actor* actor = &self->actors[i];
+    if (actor->hidden || actor->id != Tank)
       continue;
-    TileID terrain = Level_get_terrain(self, self->actors[i].pos);
+    TileID terrain = Level_get_terrain(self, actor->pos);
     if (terrain == CloneMachine || TileID_is_ice(terrain))
       continue;
-    self->actors[i].state ^= CS_REVERSE;
+    actor->state ^= CS_REVERSE;
   }
 }
 
@@ -1309,19 +1312,21 @@ static void lynx_tick_level(Level* self) {
     }
   }
   for (uint32_t i = 0; i < self->actor_count; i += 1) {
-    if (self->actors[i].hidden || !(self->actors[i].state & CS_REVERSE))
+    Actor* actor = &self->actors[i];
+    if (actor->hidden || !(actor->state & CS_REVERSE))
       continue;
-    self->actors[i].state &= ~CS_REVERSE;
-    if (!Actor_is_moving(&self->actors[i])) {
-      self->actors[i].direction = Direction_back(self->actors[i].direction);
+    actor->state &= ~CS_REVERSE;
+    if (!Actor_is_moving(actor)) {
+      actor->direction = Direction_back(actor->direction);
     }
   }
   for (uint32_t i = 0; i < self->actor_count; i += 1) {
-    if (!(self->actors[i].state & CS_PUSHED))
+    Actor* actor = &self->actors[i];
+    if (!(actor->state & CS_PUSHED))
       continue;
-    if (self->actors[i].hidden || !Actor_is_moving(&self->actors[i])) {
+    if (actor->hidden || !Actor_is_moving(actor)) {
       Level_stop_sfx(self, SND_BLOCK_MOVING);
-      self->actors[i].state &= ~CS_PUSHED;
+      actor->state &= ~CS_PUSHED;
     }
   }
   if (self->lx_state.toggle_walls_xor) {
@@ -1338,33 +1343,35 @@ static void lynx_tick_level(Level* self) {
   self->lx_state.chip_colliding_actor = NULL;
   // Decision/intent phase: all actors decide which direction to go in
   for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
-    if (&self->actors[i] != chip && self->actors[i].hidden)
+    Actor* actor = &self->actors[i];
+    if (actor != chip && actor->hidden)
       continue;
-    if (!TileID_is_animation(self->actors[i].id) && Actor_is_moving(&self->actors[i]))
+    if (!TileID_is_animation(actor->id) && Actor_is_moving(actor))
       continue;
-    Actor_do_decision(&self->actors[i], self);
+    Actor_do_decision(actor, self);
   }
   // Movement phase: all actors try to move in their predetermined directions
   for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
-    if (&self->actors[i] == chip && self->level_complete)
+    Actor* actor = &self->actors[i];
+    if (actor == chip && self->level_complete)
       continue;
-    if (&self->actors[i] != chip && self->actors[i].hidden)
+    if (actor != chip && actor->hidden)
       continue;
-    TriRes move_res = Actor_advance_movement(&self->actors[i], self, false);
+    TriRes move_res = Actor_advance_movement(actor, self, false);
     if (move_res == TRIRES_DIED)
       continue;
-    self->actors[i].move_decision = DIRECTION_NIL;
-    Actor_set_forced_move(&self->actors[i], DIRECTION_NIL);
-    TileID terrain = Level_get_terrain(self, self->actors[i].pos);
+    actor->move_decision = DIRECTION_NIL;
+    Actor_set_forced_move(actor, DIRECTION_NIL);
+    TileID terrain = Level_get_terrain(self, actor->pos);
     // In pedantic Lynx, if there's an actor on a recessed wall, the terrain
     // under chip is replaced with a wall
-    if (&self->actors[i] != chip && self->lx_state.pedantic_mode && terrain == PopupWall) {
+    if (actor != chip && self->lx_state.pedantic_mode && terrain == PopupWall) {
       self->lx_state.to_place_wall_pos = chip->pos;
     }
     // We also activate traps at this point
-    if (terrain == Button_Brown && !Actor_is_moving(&self->actors[i])) {
+    if (terrain == Button_Brown && !Actor_is_moving(actor)) {
       Position linked_pos = Level_find_connected_cell(
-          self, self->actors[i].pos, Beartrap, &self->trap_connections);
+          self, actor->pos, Beartrap, &self->trap_connections);
       if (linked_pos != POSITION_NULL) {
         Level_activate_trap(self, linked_pos);
       }
@@ -1372,12 +1379,13 @@ static void lynx_tick_level(Level* self) {
   }
   // Teleport phase: teleport actors on teleports
   for (ptrdiff_t i = self->actor_count - 1; i >= 0; i -= 1) {
-    if (self->actors[i].hidden || Actor_is_moving(&self->actors[i]))
+    Actor* actor = &self->actors[i];
+    if (actor->hidden || Actor_is_moving(actor))
       continue;
-    TileID terrain = Level_get_terrain(self, self->actors[i].pos);
+    TileID terrain = Level_get_terrain(self, actor->pos);
     if (terrain != Teleport)
       continue;
-    Actor_teleport(&self->actors[i], self);
+    Actor_teleport(actor, self);
   }
   // Pedantic Lynx only: put down the wall at the position Chip was at
   if (self->lx_state.to_place_wall_pos != POSITION_NULL) {
