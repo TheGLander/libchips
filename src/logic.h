@@ -137,6 +137,7 @@ bool TileID_is_ms_special(TileID id);
 bool TileID_is_terrain(TileID id);
 bool TileID_is_actor(TileID id);
 bool TileID_is_animation(TileID id);
+bool TileID_is_block(TileID id);
 
 typedef int16_t Position;
 enum { POSITION_NULL = -1 };
@@ -160,6 +161,9 @@ Direction TileID_actor_get_dir(TileID id);
 Direction TileID_actor_get_id(TileID id);
 bool Direction_is_diagonal(Direction dir);
 
+Position Position_from_xy(int16_t x, int16_t y);
+int16_t Position_get_x(Position self);
+int16_t Position_get_y(Position self);
 Position Position_neighbor(Position self, Direction dir);
 
 typedef uint16_t GameInput;
@@ -244,8 +248,7 @@ typedef struct MsSlipper {
 } MsSlipper;
 
 typedef struct MsState {
-  uint32_t actor_count;
-  uint32_t slip_count;
+  uint32_t slips_n;
   uint32_t mscc_slippers; // transient field, reset each tick
   uint8_t chip_ticks_since_moved;
   ChipStatus chip_status;
@@ -260,7 +263,6 @@ typedef struct MsState {
 typedef struct LxState {
   bool pedantic_mode;
   Actor* chip_colliding_actor;
-  Actor* last_actor;
   Position chip_predicted_pos;
   Position to_place_wall_pos;
   uint8_t prng1;
@@ -300,6 +302,7 @@ typedef struct Level {
   uint32_t current_tick;
   uint16_t chips_left;
   Position camera_pos;
+  uint32_t actors_n;
   uint8_t player_keys[4];
   uint8_t player_boots[4];
   // `lastmove`?
@@ -336,6 +339,7 @@ Prng const* Level_get_prng_const_ptr(Level const* self);
 TileID Level_get_top_terrain(Level const* self, Position pos);
 TileID Level_get_bottom_terrain(Level const* self, Position pos);
 Actor* Level_get_actors_ptr(Level* self);
+uint32_t Level_get_actors_n(Level const* self);
 Actor* Level_get_actor_by_idx(Level* self, uint32_t idx);
 Actor* Level_get_chip_actor(Level* self);
 Actor const* Level_get_actors_const_ptr(Level const* self);

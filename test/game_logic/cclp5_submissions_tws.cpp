@@ -40,9 +40,10 @@ namespace {
   CCLP5_VOTING_TEST_SET(Krypton)
 
   TEST(CCLP5MS, LoadAndPlayLlama) {
-    size_t skips[] = {3}; // Does not sync as a likely result of TW logic patches
+    size_t skips[] = {3, 47}; // Does not sync as a likely result of TW logic patches
     // > Llama 3 is likely bug #15 (TANKS STUCK ON TELEPORTERS SHOULD NOT MOVE OFF IN REVERSE),
     // > see tank at 21,12 at 441.2 (tick 1196)
+    // Llama 47 is tank top, the tank at 12,30 at 623.8 doesn't slide back and forth anymore
     load_test_set(CCLP5_voting_Llama_ccl, sizeof(CCLP5_voting_Llama_ccl), CCLP5_voting_Llama_ms_tws, sizeof(CCLP5_voting_Llama_ms_tws), true, skips, std::size(skips));
   }
 

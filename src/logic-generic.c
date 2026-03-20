@@ -31,6 +31,9 @@ bool TileID_is_actor(TileID id) {
 bool TileID_is_animation(TileID id) {
   return id >= Water_Splash && id <= Animation_Reserved1;
 }
+bool TileID_is_block(TileID id) {
+  return id == Block_Static || TileID_actor_get_id(id) == Block;
+}
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;
 }
@@ -55,6 +58,18 @@ Direction TileID_actor_get_dir(TileID id) {
 }
 Direction TileID_actor_get_id(TileID id) {
   return id & ~3;
+}
+
+Position Position_from_xy(int16_t x, int16_t y) {
+  return y * MAP_WIDTH + x;
+}
+
+int16_t Position_get_x(Position self) {
+  return self % MAP_WIDTH;
+}
+
+int16_t Position_get_y(Position self) {
+  return self / MAP_WIDTH;
 }
 
 static int8_t const direction_offsets[] = {0, -MAP_WIDTH, -1, 0, +MAP_WIDTH,
@@ -183,6 +198,9 @@ TileID Level_get_bottom_terrain(Level const* self, Position pos) {
 Actor* Level_get_actors_ptr(Level* self) {
   return self->actors;
 }
+uint32_t Level_get_actors_n(Level const* self) {
+  return self->actors_n;
+}
 Actor* Level_get_actor_by_idx(Level* self, uint32_t idx) {
   return &self->actors[idx];
 }
@@ -306,6 +324,7 @@ hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
   hash = hash_scalar(self->current_tick, hash);
   hash = hash_scalar(self->chips_left, hash);
   hash = hash_scalar(self->camera_pos, hash);
+  hash = hash_scalar(self->actors_n, hash);
   for (uint32_t i = 0; i < 4; i += 1) {
     hash = hash_scalar(self->player_keys[i], hash);
   }
@@ -338,6 +357,9 @@ hash_t Level_get_hash(Level const* self) { // FNV-1a algorithm
     hash = hash_scalar(cell->bottom.id, hash);
     hash = hash_scalar(cell->bottom.state, hash);
   }
+  for (size_t i = 0; i < self->actors_n; i += 1) {
+    Actor_add_hash(&self->actors[i], &hash);
+  }
   self->ruleset->add_hash_level(self, &hash);
 
   return hash;
@@ -359,6 +381,8 @@ bool Level_equals(Level const* self, Level const* other) {
   if (self->chips_left != other->chips_left)
     return false;
   if (self->camera_pos != other->camera_pos)
+    return false;
+  if (self->actors_n != other->actors_n)
     return false;
   for (size_t i = 0; i < lengthof(self->player_keys); i += 1) {
     if (self->player_keys[i] != other->player_keys[i]) {
@@ -419,6 +443,11 @@ bool Level_equals(Level const* self, Level const* other) {
       return false;
     }
     if (cell_self->bottom.state != cell_other->bottom.state) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < self->actors_n; i += 1) {
+    if (!Actor_equals(&self->actors[i], &other->actors[i])) {
       return false;
     }
   }

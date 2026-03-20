@@ -20,6 +20,7 @@ sources = [
   'game_logic/cclp_public_tws_playthrough.cpp',
   'game_logic/cclp5_submissions_tws.cpp',
   'game_logic/tws_test_helpers.cpp',
+  'game_logic/cid_patchtests_ms_tws.cpp',
 ]
 
 gtest_libchips_test = executable(

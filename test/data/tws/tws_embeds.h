@@ -326,5 +326,8 @@ const uint8_t CCLP5_voting_Mobius_lynx_tws[] = {
 #embed "CCLP5_voting/CCLP5Voting-Mobius-Lynx.tws"
 };
 
+const uint8_t CID_PatchTests_ms_tws[] = {
+#embed "ChosenID/PATCH-TESTS-MS.tws"
+};
 
 #endif //LIBCHIPS_TWS_EMBEDS_H
