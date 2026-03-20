@@ -5,6 +5,14 @@ dependencies = [
   libchips_dep
 ]
 
+gtest_parallel = meson.project_source_root() + '/utils/gtest-parallel-wrapper'
+
+add_test_setup(
+  'parallel_gtest',
+  exe_wrapper: [gtest_parallel],
+  is_default: true
+)
+
 sources = [
   'ccl/format-ccl.cpp',
   'tws/format-tws.cpp',

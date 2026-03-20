@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+dir=$(dirname $BASH_SOURCE)
+# first argument is the binary, all others are passed to gtest as-is
+$dir/gtest-parallel/gtest-parallel $1 -- ${@:2}
