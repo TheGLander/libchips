@@ -1997,9 +1997,10 @@ static bool ms_init_level(Level* self) {
 
   ConnList* traps = &self->trap_connections;
   for (uint8_t n = 0; n < traps->length; n += 1) {
-    if (traps->items[n].to == Level_get_chip(self)->pos ||
-        Level_cell_get_top_floor(self, traps->items[n].to) == Block_Static ||
-        Level_is_trap_button_down(self, traps->items[n].from)) {
+    if (Level_is_trap_button_down(self, traps->items[n].from) ||
+        ((traps->items[n].to == Level_get_chip(self)->pos
+          || Level_cell_get_top_floor(self, traps->items[n].to) == Block_Static)
+        && traps->items[n].init_state)) {
       Level_spring_trap(self, traps->items[n].from);
     }
   }

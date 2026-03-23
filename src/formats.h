@@ -50,6 +50,10 @@ void LevelSet_set_name(LevelSet* self, char const* set_name);
 char const* LevelSet_get_name(LevelSet const* self);
 uint16_t LevelSet_get_levels_n(LevelSet const* self);
 LevelMetadata* LevelSet_get_level(LevelSet* self, uint16_t idx);
+LevelMetadata* LevelSet_get_level_by_level_num(LevelSet* self, uint16_t level_num);
+uint16_t LevelSet_get_level_idx_by_level_num(LevelSet const* self, uint16_t level_num);
+LevelMetadata* LevelSet_get_level_by_pass(LevelSet* self, char const pass[10]);
+uint16_t LevelSet_get_level_idx_by_pass(LevelSet const* self, char const pass[10]);
 
 typedef LevelSet* LevelSetPtr;
 DEFINE_RESULT(LevelSetPtr);
