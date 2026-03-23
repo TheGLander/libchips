@@ -214,8 +214,7 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
           uint16_t from_y = read_uint16_le(&data[trap_idx * 10 + 2]);
           uint16_t to_x = read_uint16_le(&data[trap_idx * 10 + 4]);
           uint16_t to_y = read_uint16_le(&data[trap_idx * 10 + 6]);
-          bool is_open = !(read_uint16_le(&data[trap_idx * 10 + 8]) != 0);
-          // data[trap_id*10+8] is for open/closed state, ignored here
+          bool is_open = read_uint16_le(&data[trap_idx * 10 + 8]) == 0;
           conn->from = from_x + from_y * MAP_WIDTH;
           conn->to = to_x + to_y * MAP_WIDTH;
           conn->init_state = is_open;
