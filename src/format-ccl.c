@@ -11,41 +11,87 @@
 
 char const* LevelMetadata_get_title(LevelMetadata const* self) {
   return self->title;
-};
+}
+
 uint16_t LevelMetadata_get_level_number(LevelMetadata const* self) {
   return self->level_number;
-};
+}
+
 uint16_t LevelMetadata_get_time_limit(LevelMetadata const* self) {
   return self->time_limit;
-};
+}
+
 uint16_t LevelMetadata_get_chips_required(LevelMetadata const* self) {
   return self->chips_required;
-};
+}
+
 char const* LevelMetadata_get_password(LevelMetadata const* self) {
   return self->password;
-};
+}
+
 char const* LevelMetadata_get_hint(LevelMetadata const* self) {
   return self->hint;
-};
+}
+
 char const* LevelMetadata_get_author(LevelMetadata const* self) {
   return self->author;
-};
+}
 
 void LevelSet_set_name(LevelSet* self, char const* set_name) {
   self->name = (set_name != NULL) ? strdup(set_name) : NULL;
-};
+}
+
 char const* LevelSet_get_name(LevelSet const* self) {
   return self->name;
-};
+}
+
 uint16_t LevelSet_get_levels_n(LevelSet const* self) {
   return self->levels_n;
-};
+}
+
 LevelMetadata* LevelSet_get_level(LevelSet* self, uint16_t idx) {
   if (idx >= self->levels_n) {
     return NULL;
   }
   return &self->levels[idx];
-};
+}
+
+LevelMetadata* LevelSet_get_level_by_level_num(LevelSet* self, uint16_t level_num) {
+  uint16_t idx = LevelSet_get_level_idx_by_level_num(self, level_num);
+  if (idx == (uint16_t)-1) {
+    return NULL;
+  }
+  return &self->levels[idx];
+}
+
+uint16_t LevelSet_get_level_idx_by_level_num(LevelSet const* self, uint16_t level_num) {
+  for (uint16_t idx = 0; idx < self->levels_n; idx += 1) {
+    if (self->levels[idx].level_number == level_num) {
+      return idx;
+    }
+  }
+  return -1;
+}
+
+LevelMetadata* LevelSet_get_level_by_pass(LevelSet* self, char const pass[10]) {
+  uint16_t idx = LevelSet_get_level_idx_by_pass(self, pass);
+  if (idx == (uint16_t)-1) {
+    return NULL;
+  }
+  return &self->levels[idx];
+}
+
+uint16_t LevelSet_get_level_idx_by_pass(LevelSet const* self, char const pass[10]) {
+  if (pass == NULL)
+    return -1;
+  for (uint16_t idx = 0; idx < self->levels_n; idx += 1) {
+    if (strncmp(self->levels[idx].password, pass, 10) == 0) {
+      return idx;
+    }
+  }
+  return -1;
+}
+
 
 static TileID const dat_tileid_map[] = {
     // 0x00
@@ -160,7 +206,7 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
             strndup((char const*)data, chunk_len > 64 ? chunk_len : 64);
       } else if (chunk_type == CCL_CHUNK_TRAPS) {
         uint8_t traps_n = chunk_len / 10;
-        meta->trap_links = xmalloc(sizeof(ConnList));
+        meta->trap_links = xcalloc(sizeof(ConnList), 1);
         meta->trap_links->length = traps_n;
         for (uint8_t trap_idx = 0; trap_idx < traps_n; trap_idx += 1) {
           TileConn* conn = &meta->trap_links->items[trap_idx];
@@ -168,13 +214,14 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
           uint16_t from_y = read_uint16_le(&data[trap_idx * 10 + 2]);
           uint16_t to_x = read_uint16_le(&data[trap_idx * 10 + 4]);
           uint16_t to_y = read_uint16_le(&data[trap_idx * 10 + 6]);
-          // data[trap_id*10+8] is for open/closed state, ignored here
+          bool is_open = read_uint16_le(&data[trap_idx * 10 + 8]) == 0;
           conn->from = from_x + from_y * MAP_WIDTH;
           conn->to = to_x + to_y * MAP_WIDTH;
+          conn->init_state = is_open;
         }
       } else if (chunk_type == CCL_CHUNK_CLONERS) {
         uint8_t cloners_n = chunk_len / 8;
-        meta->cloner_links = xmalloc(sizeof(ConnList));
+        meta->cloner_links = xcalloc(sizeof(ConnList), 1);
         meta->cloner_links->length = cloners_n;
         for (uint8_t cloner_idx = 0; cloner_idx < cloners_n; cloner_idx += 1) {
           TileConn* conn = &meta->cloner_links->items[cloner_idx];
@@ -184,10 +231,12 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
           uint16_t to_y = read_uint16_le(&data[cloner_idx * 8 + 6]);
           conn->from = from_x + from_y * MAP_WIDTH;
           conn->to = to_x + to_y * MAP_WIDTH;
+          conn->init_state = false;
         }
       } else if (chunk_type == CCL_CHUNK_PASSWORD) {
         strncpy(meta->password, (char const*)data,
                 chunk_len > 10 ? 10 : chunk_len);
+        meta->password[chunk_len - 1] = 0; // force a nul term as strncpy doesn't
         // Decode the password
         for (char* password_char = meta->password; *password_char != 0;
              password_char += 1) {
