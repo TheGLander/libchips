@@ -284,6 +284,7 @@ typedef struct Ruleset {
   void (*uninit_level)(Level*);
   void (*add_hash_level)(Level const*, hash_t*);
   bool (*level_equals)(Level const*, Level const*);
+  bool (*chip_can_move)(Level*);
 } Ruleset;
 RulesetID Ruleset_get_id(const Ruleset* self);
 
@@ -359,6 +360,7 @@ void Level_set_prng(Level* self, Prng other);
 Level Level_clone(Level const* self);
 hash_t Level_get_hash(Level const* self);
 bool Level_equals(Level const* self, Level const* other);
+bool Level_chip_can_move(Level* self);
 
 typedef enum Sfx {
   SND_CHIP_LOSES = 0,

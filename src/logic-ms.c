@@ -1790,13 +1790,13 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (!(actor->state & (CS_SLIP | CS_SLIDE)))
       continue;
-    Direction slipdir = self->ms_state.slip_list[n].direction;
-    if (slipdir == DIRECTION_NIL && actor->id == Chip) /* Convergence Patch */
-      Level_cell_set_top_floor(self, actor->pos, TileID_actor_with_dir(Chip, DIRECTION_NORTH));
-    if (slipdir == DIRECTION_NIL)
-      continue;
     if (actor->id != Chip)
       continue; /* new, non-Chip ignored */
+    Direction slipdir = self->ms_state.slip_list[n].direction;
+    if (slipdir == DIRECTION_NIL) { /* Convergence Patch */
+      Level_cell_set_top_floor(self, actor->pos, TileID_actor_with_dir(Chip, DIRECTION_NORTH));
+      continue;
+    }
     self->ms_state.chip_last_slip_dir = slipdir;
     bool advanced = Actor_advance_movement(actor, self, slipdir); /* useful to have advanced */
     if (advanced) {
@@ -1826,6 +1826,8 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
     }
     if (Level_check_for_ending(self))
       return;
+    // todo: we can probably add a break/return here, I don't believe its possible to ever have more than one Chip around
+    //  do try and confirm though
   }
 }
 
@@ -2085,14 +2087,14 @@ static void ms_tick_level(Level* self) {
     }
   }
 
-  Actor* cr = Level_get_chip(self);
-  Actor_choose_move(cr, self);
-  if (cr->move_decision != DIRECTION_NIL) {
+  Actor* chip = Level_get_chip(self);
+  Actor_choose_move(chip, self);
+  if (chip->move_decision != DIRECTION_NIL) {
     Actor_advance_movement(
-        cr, self, cr->move_decision); /* Squish patch, TW checked this?! */
+        chip, self, chip->move_decision); /* Squish patch, TW checked this?! */
     if (Level_check_for_ending(self)) /* TW checks advancecreature() status */
       return; /* guess it's a remnant of Chip starting on exit? */
-    cr->state |= CS_HASMOVED;
+    chip->state |= CS_HASMOVED;
   }
   Level_update_sliplist(self);
   Level_create_clones(self);
@@ -2151,10 +2153,33 @@ static bool ms_level_equals(Level const* self, Level const* other) {
   return true;
 }
 
+static bool ms_chip_can_move(Level* self) {
+  Actor* chip = Level_get_chip(self);
+  if (self->ms_state.chip_status != CHIP_OKAY) {
+    return false;
+  }
+  if (self->level_complete) {
+    return false;
+  }
+  if (!(chip->state & CS_HASMOVED)) {
+    return true;
+  }
+  // Since you can set a mouse move/goal at *any point* so long as CS_HASMOVED isn't set, we have to allow a lot of things
+  // see Actor_choose_move_chip for details
+  if ((self->current_tick & 3) == 0 || Level_has_mouse_goal(self)) {
+    return true;
+  }
+  if (chip->state & (CS_SLIP | CS_SLIDE)) {
+    return true; // Slipping will reset HASMOVED if successful, and slipping is too complex to simulate here
+  }
+  return false;
+}
+
 Ruleset const ms_logic = {.id = Ruleset_MS,
                           .init_level = ms_init_level,
                           .tick_level = ms_tick_level,
                           .uninit_level = ms_uninit_level,
                           .add_hash_level = ms_hash_level,
                           .level_equals = ms_level_equals,
+                          .chip_can_move = ms_chip_can_move,
 };
