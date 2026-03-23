@@ -456,3 +456,7 @@ bool Level_equals(Level const* self, Level const* other) {
     return false;
   return true;
 }
+
+bool Level_chip_can_move(Level* self) {
+  return self->ruleset->chip_can_move(self);
+}

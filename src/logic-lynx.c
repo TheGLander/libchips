@@ -337,7 +337,7 @@ static Direction get_ice_wall_turn_dir(TileID floor, Direction dir) {
   }
 }
 
-static Direction Actor_calculate_forced_move(Actor* self, Level* level) {
+static Direction Actor_calculate_forced_move(Actor* self, Level* level, bool advance_rff) {
   if (level->current_tick == 0)
     return DIRECTION_NIL;
   TileID terrain = Level_get_terrain(level, self->pos);
@@ -352,7 +352,7 @@ static Direction Actor_calculate_forced_move(Actor* self, Level* level) {
     if (self->id == Chip && Level_player_has_item(level, Boots_Slide))
       return DIRECTION_NIL;
     // FF overrides are now handled separately
-    return Slide_get_forced_direction(terrain, level, true);
+    return Slide_get_forced_direction(terrain, level, advance_rff);
   } else if (self->state & CS_TELEPORTED) {
     self->state &= ~CS_TELEPORTED;
     return self->direction;
@@ -1205,7 +1205,7 @@ static void Actor_do_decision(Actor* self, Level* level) {
     }
     return;
   }
-  Direction forced_move = Actor_calculate_forced_move(self, level);
+  Direction forced_move = Actor_calculate_forced_move(self, level, true);
   Actor_set_forced_move(self, forced_move);
   if (self == Level_get_chip(level)) {
     Chip_do_decision(self, level);
@@ -1507,10 +1507,31 @@ static bool lynx_level_equals(Level const* self, Level const* other) {
   return true;
 }
 
+static bool lynx_chip_can_move(Level* self) {
+  Actor* chip = Level_get_chip(self);
+  if (chip->move_cooldown) {
+    return false;
+  }
+  if (chip->id != Chip) {
+    return false;
+  }
+  if (TileID_is_slide(Level_get_terrain(self, chip->pos)) && (chip->state & CS_SLIDETOKEN)) {
+    return true;
+  }
+  if (Actor_calculate_forced_move(chip, self, false) != DIRECTION_NIL) {
+    return false;
+  }
+  if (self->lx_state.chip_stuck) {
+    return false;
+  }
+  return true;
+}
+
 Ruleset const lynx_logic = {.id = Ruleset_Lynx,
                             .init_level = lynx_init_level,
                             .tick_level = lynx_tick_level,
                             .uninit_level = lynx_uninit_level,
                             .add_hash_level = lynx_hash_level,
                             .level_equals = lynx_level_equals,
+                            .chip_can_move = lynx_chip_can_move,
 };
