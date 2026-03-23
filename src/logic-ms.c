@@ -1793,10 +1793,10 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
     if (actor->id != Chip)
       continue; /* new, non-Chip ignored */
     Direction slipdir = self->ms_state.slip_list[n].direction;
-    if (slipdir == DIRECTION_NIL && actor->id == Chip) /* Convergence Patch */
+    if (slipdir == DIRECTION_NIL) { /* Convergence Patch */
       Level_cell_set_top_floor(self, actor->pos, TileID_actor_with_dir(Chip, DIRECTION_NORTH));
-    if (slipdir == DIRECTION_NIL)
       continue;
+    }
     self->ms_state.chip_last_slip_dir = slipdir;
     bool advanced = Actor_advance_movement(actor, self, slipdir); /* useful to have advanced */
     if (advanced) {
@@ -2161,18 +2161,18 @@ static bool ms_chip_can_move(Level* self) {
   if (self->level_complete) {
     return false;
   }
-  if (chip->state & CS_HASMOVED) {
-    if ((self->current_tick & 3) == 0 || Level_has_mouse_goal(self)) {
-      return true;
-    }
-    if (chip->state & (CS_SLIP | CS_SLIDE)) {
-      return true; // Slipping will reset HASMOVED if successful, and slipping is too complex to simulate here
-    }
-    return false;
+  if (!(chip->state & CS_HASMOVED)) {
+    return true;
   }
-  // Since you can set a mouse move/goal at *any point* so long as CS_HASMOVED isn't set, we have to allow anything
+  // Since you can set a mouse move/goal at *any point* so long as CS_HASMOVED isn't set, we have to allow a lot of things
   // see Actor_choose_move_chip for details
-  return true;
+  if ((self->current_tick & 3) == 0 || Level_has_mouse_goal(self)) {
+    return true;
+  }
+  if (chip->state & (CS_SLIP | CS_SLIDE)) {
+    return true; // Slipping will reset HASMOVED if successful, and slipping is too complex to simulate here
+  }
+  return false;
 }
 
 Ruleset const ms_logic = {.id = Ruleset_MS,
