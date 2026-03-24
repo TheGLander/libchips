@@ -5,34 +5,34 @@
 #include "misc.h"
 
 bool TileID_is_slide(TileID id) {
-  return id >= Slide_North && id <= Slide_Random;
+  return id >= FORCE_FLOOR_NORTH && id <= FORCE_FLOOR_RANDOM;
 }
 bool TileID_is_ice(TileID id) {
-  return id >= Ice && id <= IceWall_Southeast;
+  return id >= ICE && id <= ICE_CORNER_SOUTH_EAST;
 }
 bool TileID_is_door(TileID id) {
-  return id >= Door_Red && id <= Door_Green;
+  return id >= DOOR_RED && id <= DOOR_GREEN;
 }
 bool TileID_is_key(TileID id) {
-  return id >= Key_Red && id <= Key_Green;
+  return id >= KEY_RED && id <= KEY_GREEN;
 }
 bool TileID_is_boots(TileID id) {
-  return id >= Boots_Ice && id <= Boots_Water;
+  return id >= BOOTS_ICE && id <= BOOTS_WATER;
 }
 bool TileID_is_ms_special(TileID id) {
-  return id >= Drowned_Chip && id <= Overlay_Buffer;
+  return id >= DROWNED_CHIP && id <= OVERLAY_BUFFER;
 }
 bool TileID_is_terrain(TileID id) {
-  return id <= Floor_Final;
+  return id <= TILE_FINAL;
 }
 bool TileID_is_actor(TileID id) {
-  return id >= Chip && id < Water_Splash;
+  return id >= CHIP && id < ANIM_WATER;
 }
 bool TileID_is_animation(TileID id) {
-  return id >= Water_Splash && id <= Animation_Reserved1;
+  return id >= ANIM_WATER && id <= ANIM_UNUSED;
 }
 bool TileID_is_block(TileID id) {
-  return id == Block_Static || TileID_actor_get_id(id) == Block;
+  return id == BLOCK_STATIC || TileID_actor_get_id(id) == BLOCK;
 }
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;
@@ -82,9 +82,32 @@ bool GameInput_is_directional(GameInput self) {
   return GAME_INPUT_DIR_MOVE_FIRST <= self && self <= GAME_INPUT_DIR_MOVE_LAST;
 }
 
+bool GameInput_is_cardinal(GameInput self) {
+  if (!GameInput_is_directional(self)) {
+    return false;
+  }
+  return Direction_is_cardinal((Direction) self);
+}
+
+bool GameInput_is_diagonal(GameInput self) {
+  if (!GameInput_is_directional(self)) {
+    return false;
+  }
+  return Direction_is_diagonal((Direction) self);
+}
+
+bool GameInput_is_mouse_move(GameInput self) {
+  return GAME_INPUT_MOUSE_MOVE_FIRST <= self && self <= GAME_INPUT_MOUSE_MOVE_LAST;
+}
+
 bool Direction_is_diagonal(Direction dir) {
   return (dir & (DIRECTION_NORTH | DIRECTION_SOUTH)) &&
          (dir & (DIRECTION_EAST | DIRECTION_WEST));
+}
+
+bool Direction_is_cardinal(Direction dir) {
+  return dir == DIRECTION_NORTH || dir == DIRECTION_SOUTH ||
+         dir == DIRECTION_EAST || dir == DIRECTION_WEST;
 }
 
 void Level_add_sfx(Level* level, Sfx sfx) {
@@ -218,37 +241,37 @@ Actor const* Level_get_chip_actor_const(Level const* self) {
 }
 uint8_t* Level_player_item_ptr(Level* level, TileID id) {
   switch (id) {
-    case Key_Red:
-    case Door_Red:
+    case KEY_RED:
+    case DOOR_RED:
       return &level->player_keys[0];
-    case Key_Blue:
-    case Door_Blue:
+    case KEY_BLUE:
+    case DOOR_BLUE:
       return &level->player_keys[1];
-    case Key_Yellow:
-    case Door_Yellow:
+    case KEY_YELLOW:
+    case DOOR_YELLOW:
       return &level->player_keys[2];
-    case Key_Green:
-    case Door_Green:
+    case KEY_GREEN:
+    case DOOR_GREEN:
       return &level->player_keys[3];
-    case Boots_Ice:
-    case Ice:
-    case IceWall_Northwest:
-    case IceWall_Northeast:
-    case IceWall_Southwest:
-    case IceWall_Southeast:
+    case BOOTS_ICE:
+    case ICE:
+    case ICE_CORNER_NORTH_WEST:
+    case ICE_CORNER_NORTH_EAST:
+    case ICE_CORNER_SOUTH_WEST:
+    case ICE_CORNER_SOUTH_EAST:
       return &level->player_boots[0];
-    case Boots_Slide:
-    case Slide_North:
-    case Slide_West:
-    case Slide_South:
-    case Slide_East:
-    case Slide_Random:
+    case BOOTS_FORCE_FLOOR:
+    case FORCE_FLOOR_NORTH:
+    case FORCE_FLOOR_WEST:
+    case FORCE_FLOOR_SOUTH:
+    case FORCE_FLOOR_EAST:
+    case FORCE_FLOOR_RANDOM:
       return &level->player_boots[1];
-    case Boots_Fire:
-    case Fire:
+    case BOOTS_FIRE:
+    case FIRE:
       return &level->player_boots[2];
-    case Boots_Water:
-    case Water:
+    case BOOTS_WATER:
+    case WATER:
       return &level->player_boots[3];
     default:
       return NULL;

@@ -32,16 +32,16 @@ void freeset(LevelsetTwssetPair pair) {
 }
 
 void print_moves(uint16_t level_num, GameInputList const* move_list, uint32_t num_ticks) {
-  char moves_chars[DIRECTION_SOUTH | DIRECTION_EAST + 1] = {};
-  moves_chars[DIRECTION_NIL] = '-';
-  moves_chars[DIRECTION_NORTH] = 'N';
-  moves_chars[DIRECTION_WEST] = 'W';
-  moves_chars[DIRECTION_SOUTH] = 'S';
-  moves_chars[DIRECTION_EAST] = 'E';
-  moves_chars[DIRECTION_NORTH | DIRECTION_WEST] = 'Q';
-  moves_chars[DIRECTION_SOUTH | DIRECTION_WEST] = 'Z';
-  moves_chars[DIRECTION_NORTH | DIRECTION_EAST] = 'R';
-  moves_chars[DIRECTION_SOUTH | DIRECTION_EAST] = 'V';
+  char moves_chars[GAME_INPUT_DIR_MOVE_LAST] = {};
+  moves_chars[INPUT_NIL] = '-';
+  moves_chars[INPUT_NORTH] = 'N';
+  moves_chars[INPUT_WEST] = 'W';
+  moves_chars[INPUT_SOUTH] = 'S';
+  moves_chars[INPUT_EAST] = 'E';
+  moves_chars[INPUT_NORTH_WEST] = 'Q';
+  moves_chars[INPUT_SOUTH_WEST] = 'Z';
+  moves_chars[INPUT_NORTH_EAST] = 'R';
+  moves_chars[INPUT_SOUTH_EAST] = 'V';
 
   printf("%u: ", level_num);
   for (size_t i = 0; i < num_ticks; i += 1) {
@@ -58,13 +58,13 @@ bool test_level(Level* level, TWSMetadata const* solution, GameInputList* input_
     Level_tick(level);
   }
 
-  if (Level_get_win_state(level) != TRIRES_SUCCESS && level->ruleset->id == Ruleset_MS) {
+  if (Level_get_win_state(level) != TRIRES_SUCCESS && level->ruleset->id == RULESET_MS) {
     //you can thank MS for slides into the exit being weird
-    Level_set_game_input(level, GameInputList_get_input(input_list, DIRECTION_NIL));
+    Level_set_game_input(level, INPUT_NIL);
     Level_tick(level);
   }
 
-  if (level->ruleset->id == Ruleset_Lynx) {
+  if (level->ruleset->id == RULESET_LYNX) {
     // Skip through the Lynx endgame timer
     while (level->lx_state.endgame_timer > 0) {
       Level_tick(level);
@@ -85,7 +85,7 @@ bool test_level(Level* level, TWSMetadata const* solution, GameInputList* input_
 void testset(LevelsetTwssetPair pair, bool allow_tick_difference, size_t skip_levels[], size_t skip_size) {
   EXPECT_EQ(LevelSet_get_levels_n(pair.set), TWSSet_get_solutions_n(pair.tws));
 
-  Ruleset const* ruleset = TWSSet_get_ruleset(pair.tws) == Ruleset_MS ? &ms_logic : &lynx_logic;
+  Ruleset const* ruleset = TWSSet_get_ruleset(pair.tws) == RULESET_MS ? &ms_logic : &lynx_logic;
 
   for (size_t i = 0; i < LevelSet_get_levels_n(pair.set); i += 1) {
     bool skip = false;

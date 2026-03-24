@@ -80,8 +80,8 @@ namespace {
   }
 
   TEST_F(HashEqualsTestMS, SameMoves) {
-    Level_set_game_input(level1, DIRECTION_NORTH);
-    Level_set_game_input(level2, DIRECTION_NORTH);
+    Level_set_game_input(level1, INPUT_NORTH);
+    Level_set_game_input(level2, INPUT_NORTH);
     Level_tick(level1);
     Level_tick(level2);
     EXPECT_TRUE(Level_equals(level1, level2));
@@ -91,42 +91,42 @@ namespace {
   void quad_tick(Level* level, GameInput input) {
     Level_set_game_input(level, input);
     Level_tick(level);
-    Level_set_game_input(level, DIRECTION_NIL);
+    Level_set_game_input(level, INPUT_NIL);
     Level_tick(level);
     Level_tick(level);
     Level_tick(level);
   }
 
   TEST_F(HashEqualsTestMS, DifferentMovesDifferentState) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
     EXPECT_FALSE(Level_equals(level1, level2));
     EXPECT_NE(Level_get_hash(level1), Level_get_hash(level2));
   }
 
   TEST_F(HashEqualsTestMS, DifferentMovesSameState) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_EAST);
-    quad_tick(level1, DIRECTION_NORTH); // Crash into the wall to ensure same dir
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_EAST);
+    quad_tick(level1, INPUT_NORTH); // Crash into the wall to ensure same dir
 
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_NORTH); // Ditto on wall crash
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_NORTH); // Ditto on wall crash
 
     EXPECT_TRUE(Level_equals(level1, level2));
     EXPECT_EQ(Level_get_hash(level1), Level_get_hash(level2));
   }
 
   TEST_F(HashEqualsTestMS, DifferentMoves2) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_EAST); // Without the north move Chip's direction will change
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_EAST); // Without the north move Chip's direction will change
 
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
-    quad_tick(level2, DIRECTION_NORTH);
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
+    quad_tick(level2, INPUT_NORTH);
 
     EXPECT_FALSE(Level_equals(level1, level2));
     EXPECT_NE(Level_get_hash(level1), Level_get_hash(level2));
@@ -146,8 +146,8 @@ namespace {
   }
 
   TEST_F(HashEqualsTestLynx, SameMoves) {
-    Level_set_game_input(level1, DIRECTION_NORTH);
-    Level_set_game_input(level2, DIRECTION_NORTH);
+    Level_set_game_input(level1, INPUT_NORTH);
+    Level_set_game_input(level2, INPUT_NORTH);
     Level_tick(level1);
     Level_tick(level2);
     EXPECT_TRUE(Level_equals(level1, level2));
@@ -155,35 +155,35 @@ namespace {
   }
 
   TEST_F(HashEqualsTestLynx, DifferentMovesDifferentState) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
     EXPECT_FALSE(Level_equals(level1, level2));
     EXPECT_NE(Level_get_hash(level1), Level_get_hash(level2));
   }
 
   TEST_F(HashEqualsTestLynx, DifferentMovesSameState) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_EAST);
-    quad_tick(level1, DIRECTION_NORTH); // Crash into the wall to ensure same dir
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_EAST);
+    quad_tick(level1, INPUT_NORTH); // Crash into the wall to ensure same dir
 
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_NORTH); // Ditto on wall crash
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_NORTH); // Ditto on wall crash
 
     EXPECT_TRUE(Level_equals(level1, level2));
     EXPECT_EQ(Level_get_hash(level1), Level_get_hash(level2));
   }
 
   TEST_F(HashEqualsTestLynx, DifferentMoves2) {
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_NORTH);
-    quad_tick(level1, DIRECTION_EAST); // Without the north move Chip's direction will change
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_NORTH);
+    quad_tick(level1, INPUT_EAST); // Without the north move Chip's direction will change
 
-    quad_tick(level2, DIRECTION_NORTH);
-    quad_tick(level2, DIRECTION_EAST);
-    quad_tick(level2, DIRECTION_NORTH);
+    quad_tick(level2, INPUT_NORTH);
+    quad_tick(level2, INPUT_EAST);
+    quad_tick(level2, INPUT_NORTH);
 
     EXPECT_FALSE(Level_equals(level1, level2));
     EXPECT_NE(Level_get_hash(level1), Level_get_hash(level2));

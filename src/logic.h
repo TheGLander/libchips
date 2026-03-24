@@ -7,126 +7,125 @@
 
 #include "random.h"
 #include "hash.h"
+#include "misc.h"
 
 #define MAP_WIDTH (32)
 #define MAP_HEIGHT (32)
 
 #define MAX_CREATURES (2 * MAP_WIDTH * MAP_HEIGHT)
 
-typedef enum RulesetID {
-  Ruleset_None = 0,
-  Ruleset_Lynx = 1,
-  Ruleset_MS = 2,
-  Ruleset_Count,
-  Ruleset_First = Ruleset_Lynx
-} RulesetID;
+ENUM_UNDERLYING(RulesetID, uint8_t) {
+  RULESET_NONE = 0,
+  RULESET_LYNX = 1,
+  RULESET_MS = 2,
+  RULESET_COUNT,
+  RULESET_FIRST = RULESET_LYNX
+};
 
-typedef enum TileID {
-  Nothing = 0,
+ENUM_UNDERLYING(TileID, uint8_t) {
+  NOTHING = 0,
 
-  Empty = 0x01,
+  FLOOR = 0x01,
 
-  Slide_North = 0x02,
-  Slide_West = 0x03,
-  Slide_South = 0x04,
-  Slide_East = 0x05,
-  Slide_Random = 0x06,
-  Ice = 0x07,
-  IceWall_Northwest = 0x08,
-  IceWall_Northeast = 0x09,
-  IceWall_Southwest = 0x0A,
-  IceWall_Southeast = 0x0B,
-  Gravel = 0x0C,
-  Dirt = 0x0D,
-  Water = 0x0E,
-  Fire = 0x0F,
-  Bomb = 0x10,
-  Beartrap = 0x11,
-  Burglar = 0x12,
-  HintButton = 0x13,
+  FORCE_FLOOR_NORTH = 0x02,
+  FORCE_FLOOR_WEST = 0x03,
+  FORCE_FLOOR_SOUTH = 0x04,
+  FORCE_FLOOR_EAST = 0x05,
+  FORCE_FLOOR_RANDOM = 0x06,
+  ICE = 0x07,
+  ICE_CORNER_NORTH_WEST = 0x08,
+  ICE_CORNER_NORTH_EAST = 0x09,
+  ICE_CORNER_SOUTH_WEST = 0x0A,
+  ICE_CORNER_SOUTH_EAST = 0x0B,
+  GRAVEL = 0x0C,
+  DIRT = 0x0D,
+  WATER = 0x0E,
+  FIRE = 0x0F,
+  BOMB = 0x10,
+  TRAP = 0x11,
+  THIEF = 0x12,
+  HINT = 0x13,
 
-  Button_Blue = 0x14,
-  Button_Green = 0x15,
-  Button_Red = 0x16,
-  Button_Brown = 0x17,
-  Teleport = 0x18,
+  BUTTON_TANK = 0x14,
+  BUTTON_TOGGLE = 0x15,
+  BUTTON_CLONE = 0x16,
+  BUTTON_TRAP = 0x17,
+  TELEPORT = 0x18,
 
-  Wall = 0x19,
-  Wall_North = 0x1A,
-  Wall_West = 0x1B,
-  Wall_South = 0x1C,
-  Wall_East = 0x1D,
-  Wall_Southeast = 0x1E,
-  HiddenWall_Perm = 0x1F,
-  HiddenWall_Temp = 0x20,
-  BlueWall_Real = 0x21,
-  BlueWall_Fake = 0x22,
-  SwitchWall_Open = 0x23,
-  SwitchWall_Closed = 0x24,
-  PopupWall = 0x25,
+  WALL = 0x19,
+  THIN_WALL_NORTH = 0x1A,
+  THIN_WALL_WEST = 0x1B,
+  THIN_WALL_SOUTH = 0x1C,
+  THIN_WALL_EAST = 0x1D,
+  THIN_WALL_SOUTH_EAST = 0x1E,
+  INVISIBLE_WALL = 0x1F,
+  HIDDEN_WALL = 0x20,
+  BLUE_WALL_FAKE = 0x21,
+  BLUE_WALL_REAL = 0x22,
+  TOGGLE_DOOR_OPEN = 0x23,
+  TOGGLE_DOOR_CLOSED = 0x24,
+  POPUP_WALL = 0x25,
 
-  CloneMachine = 0x26,
+  CLONE_MACHINE = 0x26,
 
-  Door_Red = 0x27,
-  Door_Blue = 0x28,
-  Door_Yellow = 0x29,
-  Door_Green = 0x2A,
-  Socket = 0x2B,
-  Exit = 0x2C,
+  DOOR_RED = 0x27,
+  DOOR_BLUE = 0x28,
+  DOOR_YELLOW = 0x29,
+  DOOR_GREEN = 0x2A,
+  SOCKET = 0x2B,
+  EXIT = 0x2C,
 
-  ICChip = 0x2D,
-  Key_Red = 0x2E,
-  Key_Blue = 0x2F,
-  Key_Yellow = 0x30,
-  Key_Green = 0x31,
-  Boots_Ice = 0x32,
-  Boots_Slide = 0x33,
-  Boots_Fire = 0x34,
-  Boots_Water = 0x35,
+  IC_CHIP = 0x2D,
+  KEY_RED = 0x2E,
+  KEY_BLUE = 0x2F,
+  KEY_YELLOW = 0x30,
+  KEY_GREEN = 0x31,
+  BOOTS_ICE = 0x32,
+  BOOTS_FORCE_FLOOR = 0x33,
+  BOOTS_FIRE = 0x34,
+  BOOTS_WATER = 0x35,
 
-  Block_Static = 0x36,
+  BLOCK_STATIC = 0x36,
 
-  Drowned_Chip = 0x37,
-  Burned_Chip = 0x38,
-  Bombed_Chip = 0x39,
-  Exited_Chip = 0x3A,
-  Exit_Extra_1 = 0x3B,
-  Exit_Extra_2 = 0x3C,
+  DROWNED_CHIP = 0x37,
+  BURNED_CHIP = 0x38,
+  BOMBED_CHIP = 0x39,
+  EXITED_CHIP = 0x3A,
+  EXIT_ANIM_1 = 0x3B,
+  EXIT_ANIM_2 = 0x3C,
 
-  Overlay_Buffer = 0x3D,
+  OVERLAY_BUFFER = 0x3D,
 
-  Floor_Reserved2 = 0x3E,
-  Floor_Reserved1 = 0x3F,
+  UNUSED_TILE_1 = 0x3E,
+  UNUSED_TILE_2 = 0x3F,
+  ICE_BLOCK = 0x40,
 
-  Floor_Final = 0x7F,
+  TILE_FINAL = 0x7F,
 
-  Chip = 0x80,
+  CHIP = 0x80,
 
-  Block = 0x84,
+  BLOCK = 0x84,
 
-  Tank = 0x88,
-  Ball = 0x8C,
-  Glider = 0x90,
-  Fireball = 0x94,
-  Walker = 0x98,
-  Blob = 0x9C,
-  Teeth = 0xA0,
-  Bug = 0xA4,
-  Paramecium = 0xA8,
+  TANK = 0x88,
+  BALL = 0x8C,
+  GLIDER = 0x90,
+  FIREBALL = 0x94,
+  WALKER = 0x98,
+  BLOB = 0x9C,
+  TEETH = 0xA0,
+  BUG = 0xA4,
+  PARAMECIUM = 0xA8,
 
-  Swimming_Chip = 0xAC,
-  Pushing_Chip = 0xB0,
+  SWIMMING_CHIP = 0xAC,
+  PUSHING_CHIP = 0xB0,
 
-  Entity_Reserved2 = 0xB4,
-  Entity_Reserved1 = 0xB8,
+  CREATURE_FINAL = 0xF8,
 
-  Entity_Last = 0xF8,
-
-  Water_Splash = 0xFC,
-  Bomb_Explosion = 0xFD,
-  Entity_Explosion = 0xFE,
-  Animation_Reserved1 = 0xFF
-} TileID;
+  ANIM_WATER = 0xFC,
+  ANIM_BOMB = 0xFD,
+  ANIM_ENTITY = 0xFE,
+  ANIM_UNUSED = 0xFF
+};
 
 bool TileID_is_slide(TileID id);
 bool TileID_is_ice(TileID id);
@@ -139,16 +138,17 @@ bool TileID_is_actor(TileID id);
 bool TileID_is_animation(TileID id);
 bool TileID_is_block(TileID id);
 
-typedef int16_t Position;
-enum { POSITION_NULL = -1 };
-enum {
+ENUM_UNDERLYING(Position, int16_t) {
+  POSITION_NULL = -1
+};
+
+ENUM_UNDERLYING(Direction, uint8_t) {
   DIRECTION_NIL = 0,
   DIRECTION_NORTH = 1,
   DIRECTION_WEST = 2,
   DIRECTION_SOUTH = 4,
   DIRECTION_EAST = 8,
 };
-typedef uint8_t Direction;
 
 uint8_t Direction_to_idx(Direction dir);
 Direction Direction_from_idx(uint8_t idx);
@@ -160,34 +160,55 @@ TileID TileID_actor_with_dir(TileID id, Direction dir);
 Direction TileID_actor_get_dir(TileID id);
 Direction TileID_actor_get_id(TileID id);
 bool Direction_is_diagonal(Direction dir);
+bool Direction_is_cardinal(Direction dir);
 
 Position Position_from_xy(int16_t x, int16_t y);
 int16_t Position_get_x(Position self);
 int16_t Position_get_y(Position self);
 Position Position_neighbor(Position self, Direction dir);
 
-typedef uint16_t GameInput;
 enum {  // Mouse moves are a 19x19 square relative to Chip, packing them into 9
         // bits, I don't know where else to put this
-  MOUSERANGEMIN = -9,
-  MOUSERANGEMAX = +9,
-  MOUSERANGE = 19,
+  MOUSE_RANGE_MIN = -9,
+  MOUSE_RANGE_MAX = +9,
+  MOUSE_RANGE = MOUSE_RANGE_MAX - MOUSE_RANGE_MIN + 1,
 };
-enum {
-  GAME_INPUT_DIR_MOVE_FIRST = DIRECTION_NORTH,
+
+ENUM_UNDERLYING(GameInput, uint16_t) {
+  INPUT_NIL = DIRECTION_NIL,
+  INPUT_NORTH = DIRECTION_NORTH,
+  INPUT_WEST = DIRECTION_WEST,
+  INPUT_SOUTH = DIRECTION_SOUTH,
+  INPUT_EAST = DIRECTION_EAST,
+
+  INPUT_NORTH_WEST = DIRECTION_NORTH | DIRECTION_WEST,
+  INPUT_SOUTH_WEST = DIRECTION_SOUTH | DIRECTION_WEST,
+  INPUT_NORTH_EAST = DIRECTION_NORTH | DIRECTION_EAST,
+  INPUT_SOUTH_EAST = DIRECTION_SOUTH | DIRECTION_EAST,
+
+  GAME_INPUT_DIR_MOVE_FIRST = INPUT_NORTH,
   GAME_INPUT_DIR_MOVE_LAST =
-      DIRECTION_NORTH | DIRECTION_EAST | DIRECTION_SOUTH | DIRECTION_WEST,
+      INPUT_NORTH | INPUT_EAST | INPUT_SOUTH | INPUT_WEST,
 
   GAME_INPUT_MOUSE_MOVE_FIRST,
   GAME_INPUT_MOUSE_MOVE_LAST =
-      GAME_INPUT_MOUSE_MOVE_FIRST + MOUSERANGE * MOUSERANGE - 1,
-  GAME_INPUT_ABS_MOUSE_MOVE_FIRST = 512,
-  GAME_INPUT_ABS_MOUSE_MOVE_LAST =
-      GAME_INPUT_ABS_MOUSE_MOVE_FIRST +
-      MAP_WIDTH *
-          MAP_HEIGHT,  // todo: what is this, is this used? Seriously its an entire map mouse, that can't be used
+      GAME_INPUT_MOUSE_MOVE_FIRST + MOUSE_RANGE * MOUSE_RANGE - 1,
 };
+
 bool GameInput_is_directional(GameInput self);
+bool GameInput_is_cardinal(GameInput self);
+bool GameInput_is_diagonal(GameInput self);
+bool GameInput_is_mouse_move(GameInput self);
+
+static inline Direction GameInput_to_direction(GameInput self) {
+  if (!GameInput_is_directional(self)) {
+    return DIRECTION_NIL;
+  }
+  return (Direction) self;
+}
+static inline GameInput GameInput_from_direction(Direction dir) {
+  return (GameInput) dir;
+}
 
 typedef struct Actor {
   Position pos;
@@ -230,7 +251,7 @@ typedef struct MapCell {
   MapTile bottom;
 } MapCell;
 
-enum {
+ENUM_UNDERLYING(ChipStatus, uint8_t) {
   CHIP_OKAY = 0,
   CHIP_DROWNED,
   CHIP_BURNED,
@@ -241,7 +262,6 @@ enum {
   CHIP_SQUISHED_DEATH,
   CHIP_NOTOKAY
 };
-typedef uint8_t ChipStatus;
 
 typedef struct MsSlipper {
   Actor* actor;
@@ -363,7 +383,7 @@ hash_t Level_get_hash(Level const* self);
 bool Level_equals(Level const* self, Level const* other);
 bool Level_chip_can_move(Level* self);
 
-typedef enum Sfx {
+ENUM_UNDERLYING(Sfx, uint32_t) {
   SND_CHIP_LOSES = 0,
   SND_CHIP_WINS = 1,
   SND_TIME_OUT = 2,
@@ -393,7 +413,7 @@ typedef enum Sfx {
   SND_WATERWALKING = 24,
   SND_FIREWALKING = 25,
   SND_COUNT = 26,
-} Sfx;
+};
 
 void Level_add_sfx(Level* self, Sfx sfx);
 void Level_stop_sfx(Level* self, Sfx sfx);
@@ -401,7 +421,7 @@ void Level_free(Level* self);
 
 void Level_tick(Level* self);
 
-enum StateFlags {
+ENUM_UNDERLYING(StateFlags, uint16_t) {
   SF_INVALID = 0x2,
   SF_BAD_TILES = 0x4,
   SF_SHOW_HINT = 0x8,

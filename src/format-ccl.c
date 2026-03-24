@@ -93,37 +93,37 @@ uint16_t LevelSet_get_level_idx_by_pass(LevelSet const* self, char const pass[10
 }
 
 
-static TileID const dat_tileid_map[] = {
+static TileID const DAT_TILDID_MAP[] = {
     // 0x00
-    Empty, Wall, ICChip, Water, Fire, HiddenWall_Perm, Wall_North, Wall_West,
-    Wall_South, Wall_East, Block_Static, Dirt, Ice, Slide_South,
+    FLOOR, WALL, IC_CHIP, WATER, FIRE, INVISIBLE_WALL, THIN_WALL_NORTH, THIN_WALL_WEST,
+    THIN_WALL_SOUTH, THIN_WALL_EAST, BLOCK_STATIC, DIRT, ICE, FORCE_FLOOR_SOUTH,
     // 0x10
-    north(Block), west(Block), south(Block), east(Block), Slide_North,
-    Slide_East, Slide_West, Exit, Door_Blue, Door_Red, Door_Green, Door_Yellow,
-    IceWall_Southeast, IceWall_Southwest, IceWall_Northwest, IceWall_Northeast,
-    BlueWall_Fake, BlueWall_Real,
+    north(BLOCK), west(BLOCK), south(BLOCK), east(BLOCK), FORCE_FLOOR_NORTH,
+    FORCE_FLOOR_EAST, FORCE_FLOOR_WEST, EXIT, DOOR_BLUE, DOOR_RED, DOOR_GREEN, DOOR_YELLOW,
+    ICE_CORNER_SOUTH_EAST, ICE_CORNER_SOUTH_WEST, ICE_CORNER_NORTH_WEST, ICE_CORNER_NORTH_EAST,
+    BLUE_WALL_REAL, BLUE_WALL_FAKE,
     // 0x20
-    1, Burglar, Socket, Button_Green, Button_Red, SwitchWall_Closed,
-    SwitchWall_Open, Button_Brown, Button_Blue, Teleport, Bomb, Beartrap,
-    HiddenWall_Temp, Gravel, PopupWall, HintButton,
+    OVERLAY_BUFFER, THIEF, SOCKET, BUTTON_TOGGLE, BUTTON_CLONE, TOGGLE_DOOR_CLOSED,
+    TOGGLE_DOOR_OPEN, BUTTON_TRAP, BUTTON_TANK, TELEPORT, BOMB, TRAP,
+    HIDDEN_WALL, GRAVEL, POPUP_WALL, HINT,
     // 0x30
-    Wall_Southeast, CloneMachine, Slide_Random, Drowned_Chip, Burned_Chip,
-    Bombed_Chip, 1, 1, 1, Exited_Chip, Exit_Extra_1, Exit_Extra_2,
-    north(Swimming_Chip), west(Swimming_Chip), south(Swimming_Chip),
-    east(Swimming_Chip),
+    THIN_WALL_SOUTH_EAST, CLONE_MACHINE, FORCE_FLOOR_RANDOM, DROWNED_CHIP, BURNED_CHIP,
+    BOMBED_CHIP, UNUSED_TILE_1, UNUSED_TILE_2, ICE_BLOCK, EXITED_CHIP, EXIT_ANIM_1, EXIT_ANIM_2,
+    north(SWIMMING_CHIP), west(SWIMMING_CHIP), south(SWIMMING_CHIP),
+    east(SWIMMING_CHIP),
     // 0x40
-    north(Bug), west(Bug), south(Bug), east(Bug), north(Fireball),
-    west(Fireball), south(Fireball), east(Fireball), north(Ball), west(Ball),
-    south(Ball), east(Ball), north(Tank), west(Tank), south(Tank), east(Tank),
+    north(BUG), west(BUG), south(BUG), east(BUG), north(FIREBALL),
+    west(FIREBALL), south(FIREBALL), east(FIREBALL), north(BALL), west(BALL),
+    south(BALL), east(BALL), north(TANK), west(TANK), south(TANK), east(TANK),
     // 0x50
-    north(Glider), west(Glider), south(Glider), east(Glider), north(Teeth),
-    west(Teeth), south(Teeth), east(Teeth), north(Walker), west(Walker),
-    south(Walker), east(Walker), north(Blob), west(Blob), south(Blob),
-    east(Blob),
+    north(GLIDER), west(GLIDER), south(GLIDER), east(GLIDER), north(TEETH),
+    west(TEETH), south(TEETH), east(TEETH), north(WALKER), west(WALKER),
+    south(WALKER), east(WALKER), north(BLOB), west(BLOB), south(BLOB),
+    east(BLOB),
     // 0x60
-    north(Paramecium), west(Paramecium), south(Paramecium), east(Paramecium),
-    Key_Blue, Key_Red, Key_Green, Key_Yellow, Boots_Water, Boots_Fire,
-    Boots_Ice, Boots_Slide, north(Chip), west(Chip), south(Chip), east(Chip)
+    north(PARAMECIUM), west(PARAMECIUM), south(PARAMECIUM), east(PARAMECIUM),
+    KEY_BLUE, KEY_RED, KEY_GREEN, KEY_YELLOW, BOOTS_WATER, BOOTS_FIRE,
+    BOOTS_ICE, BOOTS_FORCE_FLOOR, north(CHIP), west(CHIP), south(CHIP), east(CHIP)
 };
 
 enum CllChunkTypes {
@@ -346,11 +346,11 @@ Result_LevelPtr LevelMetadata_make_level(LevelMetadata const* self,
   }
   for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     uint8_t ccl_tile_id = uncompressed_field[pos];
-    if (ccl_tile_id >= lengthof(dat_tileid_map)) {
+    if (ccl_tile_id >= lengthof(DAT_TILDID_MAP)) {
       free(level);
       return res_err(LevelPtr, "Unknown CCL tile id %02X", ccl_tile_id);
     }
-    level->map[pos].top.id = dat_tileid_map[ccl_tile_id];
+    level->map[pos].top.id = DAT_TILDID_MAP[ccl_tile_id];
   }
   if (!uncompress_field(uncompressed_field, self->layer_bottom,
                         self->layer_bottom_size)) {
@@ -359,11 +359,11 @@ Result_LevelPtr LevelMetadata_make_level(LevelMetadata const* self,
   }
   for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     uint8_t ccl_tile_id = uncompressed_field[pos];
-    if (ccl_tile_id >= lengthof(dat_tileid_map)) {
+    if (ccl_tile_id >= lengthof(DAT_TILDID_MAP)) {
       free(level);
       return res_err(LevelPtr, "Unknown CCL tile id %02X", ccl_tile_id);
     }
-    level->map[pos].bottom.id = dat_tileid_map[ccl_tile_id];
+    level->map[pos].bottom.id = DAT_TILDID_MAP[ccl_tile_id];
   }
 
   level->ruleset = ruleset;
