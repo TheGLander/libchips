@@ -40,8 +40,29 @@ protected:
 };
 
 namespace {
-  TEST_F(TrapDatLogicTestMS, TrapOpen) {
+  TEST_F(TrapDatLogicTestMS, TrapOpenChip) {
     LoadLevel("TRPO");
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TRAP);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), EXIT);
+    QuadTickLevel(DIRECTION_EAST);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TRAP);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CHIP, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 0)), EXIT);
+  }
+
+  TEST_F(TrapDatLogicTestMS, TrapClosedChip) {
+    LoadLevel("TRPC");
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TRAP);
+    QuadTickLevel(DIRECTION_EAST);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CHIP, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TRAP);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), EXIT);
+  }
+
+  TEST_F(TrapDatLogicTestMS, TrapOpenGeneral) {
+    LoadLevel("TRPO2");
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), BUTTON_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), BLOCK_STATIC);
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 1)), TRAP);
@@ -70,7 +91,7 @@ namespace {
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 1)), TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 1)), DIRT);
 
-    LoadLevel("TRPO");
+    LoadLevel("TRPO2");
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
@@ -88,7 +109,7 @@ namespace {
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), TileID_actor_with_dir(CHIP, INPUT_NORTH));
 
-    LoadLevel("TRPO");
+    LoadLevel("TRPO2");
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
@@ -105,8 +126,8 @@ namespace {
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), BLOCK_STATIC);
   }
 
-  TEST_F(TrapDatLogicTestMS, TrapClosed) {
-      LoadLevel("TRPC");
+  TEST_F(TrapDatLogicTestMS, TrapClosedGeneral) {
+    LoadLevel("TRPC2");
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), BUTTON_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), BLOCK_STATIC);
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 1)), TRAP);
@@ -135,7 +156,7 @@ namespace {
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 1)), TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 1)), WATER);
 
-    LoadLevel("TRPC");
+    LoadLevel("TRPC2");
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
@@ -150,7 +171,7 @@ namespace {
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), DIRT);
 
-    LoadLevel("TRPC");
+    LoadLevel("TRPC2");
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
@@ -164,7 +185,7 @@ namespace {
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(CHIP, INPUT_NORTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TRAP);
 
-    LoadLevel("TRPC");
+    LoadLevel("TRPC2");
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
@@ -177,7 +198,7 @@ namespace {
     QuadTickLevel(INPUT_NORTH);
     QuadTickLevel(INPUT_NORTH);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), BLOCK_STATIC);
-      EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TRAP);
-      EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), FLOOR);
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TRAP);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), FLOOR);
   }
 }
