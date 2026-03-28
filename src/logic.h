@@ -158,7 +158,7 @@ Direction Direction_right(Direction dir);
 
 TileID TileID_actor_with_dir(TileID id, Direction dir);
 Direction TileID_actor_get_dir(TileID id);
-Direction TileID_actor_get_id(TileID id);
+TileID TileID_actor_get_id(TileID id);
 bool Direction_is_diagonal(Direction dir);
 bool Direction_is_cardinal(Direction dir);
 
