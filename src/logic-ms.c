@@ -1354,7 +1354,7 @@ static void Level_spring_trap(Level* self, Position buttonpos) {
     return;
   }
   TileID id = Level_cell_get_top_floor(self, pos);
-  if (id == TILE_BLOCK_STATIC || (MapTile_get_state(MapCell_get_bottom_tile(
+  if (TileID_is_block(id) || (MapTile_get_state(MapCell_get_bottom_tile(
                                  Level_get_map_cell(self, pos))) &
                              FS_HASMUTANT)) {
     Actor* actor = Level_look_up_block(self, pos);
@@ -1696,8 +1696,8 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
     if (Level_is_trap_open(level, newpos, oldpos))
       self->state |= CS_RELEASED;
   } else if (Level_cell_get_bottom_floor(level, newpos) == TILE_TRAP) {
-    for (size_t i = 0; i < level->trap_connections.length; i += 1) {
-      if (level->trap_connections.items[i].to == newpos) {
+    for (uint8_t i = 0; i < level->trap_connections.length; i += 1) { // I think this can only fire for Chip and blocks?
+      if (level->trap_connections.items[i].to == newpos && level->trap_connections.items[i].init_state) {
         self->state |= CS_RELEASED;
         break;
       }
@@ -1998,11 +1998,16 @@ static bool ms_init_level(Level* self) {
 
   ConnList* traps = &self->trap_connections;
   for (uint8_t n = 0; n < traps->length; n += 1) {
+    Position to = traps->items[n].to;
     if (Level_is_trap_button_down(self, traps->items[n].from) ||
-        ((traps->items[n].to == Level_get_chip(self)->pos
-          || Level_cell_get_top_floor(self, traps->items[n].to) == TILE_BLOCK_STATIC)
+        ((to == Level_get_chip(self)->pos
+          || TileID_is_block(Level_cell_get_top_floor(self, to)))
         && traps->items[n].init_state)) {
       Level_spring_trap(self, traps->items[n].from);
+      // You may wonder if this entire init_state thing can be combined with trap releasing and cloning and remove
+      // those flags. Well, the answer is no due to many layers of MS shenanigans but mostly due to things checking
+      // if any of a trap's buttons are held when entering a trap allowing them to leave, which has to be a mark on
+      // the creature
     }
   }
 

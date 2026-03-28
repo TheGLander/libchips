@@ -32,7 +32,7 @@ bool TileID_is_animation(TileID id) {
   return id >= ANIM_WATER && id <= ANIM_UNUSED;
 }
 bool TileID_is_block(TileID id) {
-  return id == TILE_BLOCK_STATIC || TileID_actor_get_id(id) == CREATURE_BLOCK;
+  return id == TILE_BLOCK_STATIC || (TileID_is_actor(id) && TileID_actor_get_id(id) == CREATURE_BLOCK);
 }
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;

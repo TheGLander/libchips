@@ -144,6 +144,11 @@ namespace {
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(BLOCK, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 3)), TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), WATER);
+    QuadTickLevel(INPUT_WEST);
+    QuadTickLevel(INPUT_EAST);
+    QuadTickLevel(INPUT_NIL);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TRAP);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), DIRT);
 
     LoadLevel("TRPC");
     QuadTickLevel(INPUT_EAST);
