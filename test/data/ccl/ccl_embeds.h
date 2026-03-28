@@ -166,8 +166,12 @@ const uint8_t CID_PatchTests_ccl[] = {
 #embed "ChosenID/PATCH-TESTS.ccl"
 };
 
-const uint8_t MiscTestsMS_ccl[] = {
-#embed "Misc/MSTests.ccl"
+// const uint8_t MiscTestsMS_ccl[] = {
+// #embed "Misc/MSTests.ccl"
+// };
+
+const uint8_t TrapDatTestsMS_ccl[] = {
+#embed "Misc/TrapDatTestsMS.ccl"
 };
 
 #endif //LIBCHIPS_CCL_EMBEDS_H
