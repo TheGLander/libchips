@@ -1697,9 +1697,9 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
       self->state |= CS_RELEASED;
   } else if (Level_cell_get_bottom_floor(level, newpos) == TILE_TRAP) {
     for (uint8_t i = 0; i < level->trap_connections.length; i += 1) { // I think this can only fire for Chip and blocks?
-      if (level->trap_connections.items[i].to == newpos && level->trap_connections.items[i].init_state) {
+      if (level->trap_connections.items[i].to == newpos && level->trap_connections.items[i].ccl_state) {
         self->state |= CS_RELEASED;
-        level->trap_connections.items[i].init_state = false;
+        level->trap_connections.items[i].ccl_state = false;
         // do not like the idea of this possibly being able to fire multiple times, hence the false set
         break;
       }
@@ -2004,9 +2004,9 @@ static bool ms_init_level(Level* self) {
     if (Level_is_trap_button_down(self, traps->items[n].from) ||
         ((to == Level_get_chip(self)->pos
           || TileID_is_block(Level_cell_get_top_floor(self, to)))
-        && traps->items[n].init_state)) {
+        && traps->items[n].ccl_state)) {
       Level_spring_trap(self, traps->items[n].from);
-      traps->items[n].init_state = false;
+      traps->items[n].ccl_state = false;
       // You may wonder if this entire init_state thing can be combined with trap releasing and cloning and remove
       // those flags. Well, the answer is no due to many layers of MS shenanigans but mostly due to things checking
       // if any of a trap's buttons are held when entering a trap allowing them to leave, which has to be a mark on

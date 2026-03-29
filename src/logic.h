@@ -232,7 +232,7 @@ bool Actor_equals(Actor const* actor, Actor const* other);
 typedef struct TileConn {
   Position from;
   Position to;
-  bool init_state;
+  bool ccl_state;
 } TileConn;
 
 typedef struct ConnList {
