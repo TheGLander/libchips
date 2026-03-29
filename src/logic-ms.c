@@ -106,7 +106,7 @@ static inline TileID MapCell_set_bottom_floor(MapCell* self, TileID tile) {
 static inline MapTile MapCell_pop_tile(MapCell* self) {
   MapTile tile = self->top;
   self->top = self->bottom;
-  self->bottom.id = FLOOR;
+  self->bottom.id = TILE_FLOOR;
   self->bottom.state = 0;
   return tile;
 }
@@ -203,7 +203,7 @@ static inline TileID Level_cell_get_terrain(Level const* self, Position pos) {
   if (!TileID_is_key(cell->bottom.id) && !TileID_is_boots(cell->bottom.id) &&
       !TileID_is_actor(cell->bottom.id))
     return cell->bottom.id;
-  return FLOOR;
+  return TILE_FLOOR;
 }
 
 static inline void Level_cell_set_terrain(Level* self,
@@ -341,15 +341,15 @@ static void Level_remove_actor_from_slip_list(Level* self, Actor const* actor) {
  */
 static Direction Level_get_slide_dir(Level* self, TileID floor) {
   switch (floor) {
-    case FORCE_FLOOR_NORTH:
+    case TILE_FORCE_FLOOR_NORTH:
       return DIRECTION_NORTH;
-    case FORCE_FLOOR_WEST:
+    case TILE_FORCE_FLOOR_WEST:
       return DIRECTION_WEST;
-    case FORCE_FLOOR_SOUTH:
+    case TILE_FORCE_FLOOR_SOUTH:
       return DIRECTION_SOUTH;
-    case FORCE_FLOOR_EAST:
+    case TILE_FORCE_FLOOR_EAST:
       return DIRECTION_EAST;
-    case FORCE_FLOOR_RANDOM:
+    case TILE_FORCE_FLOOR_RANDOM:
       return 1 << Prng_random4(&self->prng);
     default:
       return DIRECTION_NIL;
@@ -360,19 +360,19 @@ static Direction Level_get_slide_dir(Level* self, TileID floor) {
  */
 static Direction get_ice_wall_turn_dir(TileID floor, Direction dir) {
   switch (floor) {
-    case ICE_CORNER_NORTH_EAST:
+    case TILE_ICE_CORNER_NORTH_EAST:
       return dir == DIRECTION_SOUTH  ? DIRECTION_EAST
              : dir == DIRECTION_WEST ? DIRECTION_NORTH
                                      : dir;
-    case ICE_CORNER_SOUTH_WEST:
+    case TILE_ICE_CORNER_SOUTH_WEST:
       return dir == DIRECTION_NORTH  ? DIRECTION_WEST
              : dir == DIRECTION_EAST ? DIRECTION_SOUTH
                                      : dir;
-    case ICE_CORNER_NORTH_WEST:
+    case TILE_ICE_CORNER_NORTH_WEST:
       return dir == DIRECTION_SOUTH  ? DIRECTION_WEST
              : dir == DIRECTION_EAST ? DIRECTION_NORTH
                                      : dir;
-    case ICE_CORNER_SOUTH_EAST:
+    case TILE_ICE_CORNER_SOUTH_EAST:
       return dir == DIRECTION_NORTH  ? DIRECTION_EAST
              : dir == DIRECTION_WEST ? DIRECTION_SOUTH
                                      : dir;
@@ -408,7 +408,7 @@ static Position Level_locate_cloner_by_button(Level const* self,
  */
 static bool Level_is_trap_button_down(Level const* self, Position pos) {
   return pos >= 0 && pos < MAP_WIDTH * MAP_HEIGHT &&
-         Level_cell_get_top_floor(self, pos) != BUTTON_TRAP;
+         Level_cell_get_top_floor(self, pos) != TILE_BUTTON_TRAP;
 }
 
 /* Return TRUE if a bear trap is currently passable.
@@ -431,19 +431,19 @@ static void Level_toggle_walls(Level* level) {
     MapCell* cell = Level_get_map_cell(level, pos);
     MapTile* top = MapCell_get_top_tile(cell);
     MapTile* bottom = MapCell_get_bottom_tile(cell);
-    if ((MapTile_get_floor(top) == TOGGLE_DOOR_OPEN ||
-         MapTile_get_floor(top) == TOGGLE_DOOR_CLOSED) &&
+    if ((MapTile_get_floor(top) == TILE_TOGGLE_DOOR_OPEN ||
+         MapTile_get_floor(top) == TILE_TOGGLE_DOOR_CLOSED) &&
         !(MapTile_get_state(top) & FS_BROKEN)) {
-      MapTile_set_floor(top, MapTile_get_floor(top) == TOGGLE_DOOR_OPEN
-                                 ? TOGGLE_DOOR_CLOSED
-                                 : TOGGLE_DOOR_OPEN);
+      MapTile_set_floor(top, MapTile_get_floor(top) == TILE_TOGGLE_DOOR_OPEN
+                                 ? TILE_TOGGLE_DOOR_CLOSED
+                                 : TILE_TOGGLE_DOOR_OPEN);
     }
-    if ((MapTile_get_floor(bottom) == TOGGLE_DOOR_OPEN ||
-         MapTile_get_floor(bottom) == TOGGLE_DOOR_CLOSED) &&
+    if ((MapTile_get_floor(bottom) == TILE_TOGGLE_DOOR_OPEN ||
+         MapTile_get_floor(bottom) == TILE_TOGGLE_DOOR_CLOSED) &&
         !(MapTile_get_state(bottom) & FS_BROKEN)) {
-      MapTile_set_floor(bottom, MapTile_get_floor(bottom) == TOGGLE_DOOR_OPEN
-                                    ? TOGGLE_DOOR_CLOSED
-                                    : TOGGLE_DOOR_OPEN);
+      MapTile_set_floor(bottom, MapTile_get_floor(bottom) == TILE_TOGGLE_DOOR_OPEN
+                                    ? TILE_TOGGLE_DOOR_CLOSED
+                                    : TILE_TOGGLE_DOOR_OPEN);
     }
   }
 }
@@ -459,7 +459,7 @@ static Actor* Level_create_actor(Level* self) {
   }
   Actor* actor = &self->actors[self->actors_n];
   *actor = (Actor){.pos = POSITION_NULL,
-                   .id = NOTHING,
+                   .id = TILE_NOTHING,
                    .direction = DIRECTION_NIL,
                    .move_cooldown = 0,
                    .animation_frame = 0,
@@ -483,7 +483,7 @@ static Actor* Level_look_up_creature(Level* self,
     if (self->actors[n].hidden)
       continue;
     if (self->actors[n].pos == pos)
-      if (self->actors[n].id != CHIP || includechip)
+      if (self->actors[n].id != CREATURE_CHIP || includechip)
         return &self->actors[n];
   }
   return NULL;
@@ -494,7 +494,7 @@ static Actor* Level_look_up_creature(Level* self,
  */
 static Actor* Level_look_up_block(Level* self, Position pos) {
   for (uint32_t n = 0; n < self->actors_n; n += 1) {
-    if (self->actors[n].id == BLOCK && self->actors[n].pos == pos
+    if (self->actors[n].id == CREATURE_BLOCK && self->actors[n].pos == pos
         && !self->actors[n].hidden) {
       return &self->actors[n];
     }
@@ -506,12 +506,12 @@ static Actor* Level_look_up_block(Level* self, Position pos) {
          self->current_tick);
     return NULL;
   }
-  block->id = BLOCK;
+  block->id = CREATURE_BLOCK;
   block->pos = pos;
   TileID id = Level_cell_get_top_floor(self, pos);
-  if (id == BLOCK_STATIC)
+  if (id == TILE_BLOCK_STATIC)
     block->direction = DIRECTION_NIL;
-  else if (TileID_actor_get_id(id) == BLOCK)
+  else if (TileID_actor_get_id(id) == CREATURE_BLOCK)
     block->direction = TileID_actor_get_dir(id);
   else
     warn("%d: Level_look_up_block called on blockless location",
@@ -527,23 +527,23 @@ static void Actor_update_floor(Actor* self, Level* level) {
     return;
   MapTile* tile = MapCell_get_top_tile(Level_get_map_cell(level, self->pos));
   TileID id = self->id;
-  if (id == BLOCK) {
-    Level_cell_set_top_floor(level, self->pos, BLOCK_STATIC);
+  if (id == CREATURE_BLOCK) {
+    Level_cell_set_top_floor(level, self->pos, TILE_BLOCK_STATIC);
     if (self->state & CS_MUTANT)
-      MapTile_set_floor(tile, TileID_actor_with_dir(CHIP, DIRECTION_NORTH));
+      MapTile_set_floor(tile, TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
     return;
-  } else if (id == CHIP) {
+  } else if (id == CREATURE_CHIP) {
     if (level->ms_state.chip_status) {
       switch (level->ms_state.chip_status) {
         case CHIP_BURNED:
-          MapTile_set_floor(tile, TileID_actor_with_dir(CHIP, BURNED_CHIP));
+          MapTile_set_floor(tile, TileID_actor_with_dir(CREATURE_CHIP, TILE_BURNED_CHIP));
           return;
         case CHIP_DROWNED:
-          MapTile_set_floor(tile, TileID_actor_with_dir(CHIP, DROWNED_CHIP));
+          MapTile_set_floor(tile, TileID_actor_with_dir(CREATURE_CHIP, TILE_DROWNED_CHIP));
           return;
       }
-    } else if (Level_cell_get_bottom_floor(level, self->pos) == WATER) {
-      id = SWIMMING_CHIP;
+    } else if (Level_cell_get_bottom_floor(level, self->pos) == TILE_WATER) {
+      id = CREATURE_SWIMMING_CHIP;
     }
   }
 
@@ -558,7 +558,7 @@ static void Actor_update_floor(Actor* self, Level* level) {
 /* Add the given creature's tile to the map.
  */
 static void Actor_add_to_map(Actor* self, Level* level) {
-  static MapTile const dummy = {FLOOR, 0};
+  static MapTile const dummy = {TILE_FLOOR, 0};
 
   if (self->hidden)
     return;
@@ -570,7 +570,7 @@ static void Actor_add_to_map(Actor* self, Level* level) {
  */
 static Actor* Level_awaken_creature(Level* self, Position pos) {
   TileID tileid = Level_cell_get_top_floor(self, pos);
-  if (!TileID_is_actor(tileid) || TileID_actor_get_id(tileid) == CHIP)
+  if (!TileID_is_actor(tileid) || TileID_actor_get_id(tileid) == CREATURE_CHIP)
     return NULL;
   Actor* new = Level_create_actor(self);
   if (!new) {
@@ -586,7 +586,7 @@ static Actor* Level_awaken_creature(Level* self, Position pos) {
  */
 static void Actor_remove(Actor* self, Level* level) {
   self->state &= ~(CS_SLIP | CS_SLIDE);
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     if (level->ms_state.chip_status == CHIP_OKAY)
       level->ms_state.chip_status = CHIP_NOTOKAY;
   } else
@@ -599,7 +599,7 @@ static void Actor_remove(Actor* self, Level* level) {
 static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
   for (uint32_t n = 0; n < self->actors_n; n += 1) {
     Actor* actor = &self->actors[n]; /* convenience, Tank Top Glitch */
-    if (actor->hidden || actor->id != TANK)
+    if (actor->hidden || actor->id != CREATURE_TANK)
       continue;
     actor->direction = Direction_back(actor->direction);
     if (actor->state & CS_SLIP && !(actor->state & CS_SLIDE) &&
@@ -612,7 +612,7 @@ static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
     if (actor == invoking_actor)
       continue;
     if (TileID_actor_get_id(Level_cell_get_top_floor(self, actor->pos)) ==
-        TANK) {
+        CREATURE_TANK) {
       Actor_update_floor(actor, self);
     } else if ((actor->state & CS_SPONTANEOUS)) {
       /* handle Spontaneous Generation */
@@ -650,21 +650,21 @@ static void Actor_start_floor_movement(Actor* self,
     }
   } else if (TileID_is_slide(floor)) {
     dir = Level_get_slide_dir(level, floor);
-  } else if (floor == TELEPORT) {
+  } else if (floor == TILE_TELEPORT) {
     if (fdir == DIRECTION_NIL)
       dir = self->direction; /* tank reversal patch */
-  } else if (floor == TRAP && self->id == BLOCK) {
+  } else if (floor == TILE_TRAP && self->id == CREATURE_BLOCK) {
     dir = self->direction;
-  } else if (self->id != CHIP) {
+  } else if (self->id != CREATURE_CHIP) {
     return; /* new with Convergence Patch */
   } else {
     dir = self->direction; /* new with Convergence Patch */
   }
 
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     /* changed with Convergence Patch */
     /* cr->state |= isslide(floor) ? CS_SLIDE : CS_SLIP; */
-    self->state |= (TileID_is_ice(floor) || (floor == TELEPORT && dir != DIRECTION_NIL)) ? CS_SLIP : CS_SLIDE;
+    self->state |= (TileID_is_ice(floor) || (floor == TILE_TELEPORT && dir != DIRECTION_NIL)) ? CS_SLIP : CS_SLIDE;
     Level_prepend_to_slip_list(level, self, dir);
     self->direction = dir;
     Actor_update_floor(self, level);
@@ -736,8 +736,8 @@ static bool Level_push_block(Level* self,
   }
 
   if (!(flags & CMM_TELEPORTPUSH) &&
-      Level_cell_get_bottom_floor(self, pos) == BLOCK_STATIC)
-    Level_cell_set_bottom_floor(self, pos, FLOOR);
+      Level_cell_get_bottom_floor(self, pos) == TILE_BLOCK_STATIC)
+    Level_cell_set_bottom_floor(self, pos, TILE_FLOOR);
   if (!(flags & CMM_NODEFERBUTTONS))
     cr->state |= CS_DEFERPUSH;
   bool advanced = Actor_advance_movement(cr, self, dir);
@@ -758,92 +758,92 @@ static bool TileID_impedes_move_into(TileID self,
                                      Actor const* actor,
                                      Direction dir) {
   switch (self) {
-    case NOTHING:
-    case WALL:
-    case INVISIBLE_WALL:
-    case TOGGLE_DOOR_CLOSED:
-    case CLONE_MACHINE:
-    case DROWNED_CHIP:
-    case BURNED_CHIP:
-    case BOMBED_CHIP:
-    case EXITED_CHIP:
-    case EXIT_ANIM_1:
-    case EXIT_ANIM_2:
-    case OVERLAY_BUFFER:
-    case UNUSED_TILE_1:
-    case UNUSED_TILE_2:
-    case ICE_BLOCK:
+    case TILE_NOTHING:
+    case TILE_WALL:
+    case TILE_INVISIBLE_WALL:
+    case TILE_TOGGLE_DOOR_CLOSED:
+    case TILE_CLONE_MACHINE:
+    case TILE_DROWNED_CHIP:
+    case TILE_BURNED_CHIP:
+    case TILE_BOMBED_CHIP:
+    case TILE_EXITED_CHIP:
+    case TILE_EXIT_ANIM_1:
+    case TILE_EXIT_ANIM_2:
+    case TILE_OVERLAY_BUFFER:
+    case TILE_UNUSED_1:
+    case TILE_UNUSED_2:
+    case TILE_ICE_BLOCK:
     case ANIM_WATER:
     case ANIM_BOMB:
     case ANIM_ENTITY:
       return true;
 
-    case FLOOR:
-    case FORCE_FLOOR_NORTH:
-    case FORCE_FLOOR_WEST:
-    case FORCE_FLOOR_SOUTH:
-    case FORCE_FLOOR_EAST:
-    case ICE:
-    case WATER:
-    case FIRE:
-    case BOMB:
-    case TRAP:
-    case HINT:
-    case BUTTON_TANK:
-    case BUTTON_TOGGLE:
-    case BUTTON_CLONE:
-    case BUTTON_TRAP:
-    case TELEPORT:
-    case TOGGLE_DOOR_OPEN:
-    case KEY_RED:
-    case KEY_BLUE:
-    case KEY_YELLOW:
-    case KEY_GREEN:
+    case TILE_FLOOR:
+    case TILE_FORCE_FLOOR_NORTH:
+    case TILE_FORCE_FLOOR_WEST:
+    case TILE_FORCE_FLOOR_SOUTH:
+    case TILE_FORCE_FLOOR_EAST:
+    case TILE_ICE:
+    case TILE_WATER:
+    case TILE_FIRE:
+    case TILE_BOMB:
+    case TILE_TRAP:
+    case TILE_HINT:
+    case TILE_BUTTON_TANK:
+    case TILE_BUTTON_TOGGLE:
+    case TILE_BUTTON_CLONE:
+    case TILE_BUTTON_TRAP:
+    case TILE_TELEPORT:
+    case TILE_TOGGLE_DOOR_OPEN:
+    case TILE_KEY_RED:
+    case TILE_KEY_BLUE:
+    case TILE_KEY_YELLOW:
+    case TILE_KEY_GREEN:
       return false;
 
-    case FORCE_FLOOR_RANDOM:
-    case GRAVEL:
-    case EXIT:
-    case BOOTS_ICE:
-    case BOOTS_FORCE_FLOOR:
-    case BOOTS_FIRE:
-    case BOOTS_WATER:
-      return actor->id != CHIP && actor->id != BLOCK;
-    case DIRT:
-    case THIEF:
-    case HIDDEN_WALL:
-    case BLUE_WALL_FAKE:
-    case BLUE_WALL_REAL:
-    case POPUP_WALL:
-    case DOOR_RED:
-    case DOOR_BLUE:
-    case DOOR_YELLOW:
-    case DOOR_GREEN:
-    case SOCKET:
-    case IC_CHIP:
-    case BLOCK_STATIC:
-      return actor->id != CHIP;
+    case TILE_FORCE_FLOOR_RANDOM:
+    case TILE_GRAVEL:
+    case TILE_EXIT:
+    case TILE_BOOTS_ICE:
+    case TILE_BOOTS_FORCE_FLOOR:
+    case TILE_BOOTS_FIRE:
+    case TILE_BOOTS_WATER:
+      return actor->id != CREATURE_CHIP && actor->id != CREATURE_BLOCK;
+    case TILE_DIRT:
+    case TILE_THIEF:
+    case TILE_HIDDEN_WALL:
+    case TILE_BLUE_WALL_FAKE:
+    case TILE_BLUE_WALL_REAL:
+    case TILE_POPUP_WALL:
+    case TILE_DOOR_RED:
+    case TILE_DOOR_BLUE:
+    case TILE_DOOR_YELLOW:
+    case TILE_DOOR_GREEN:
+    case TILE_SOCKET:
+    case TILE_IC_CHIP:
+    case TILE_BLOCK_STATIC:
+      return actor->id != CREATURE_CHIP;
 
-    case THIN_WALL_SOUTH_EAST:
-    case ICE_CORNER_NORTH_WEST:  // dir != instead of just dir == because a
+    case TILE_THIN_WALL_SOUTH_EAST:
+    case TILE_ICE_CORNER_NORTH_WEST:  // dir != instead of just dir == because a
                              // NIL can rarely get passed here as a result of tank top
       return dir != DIRECTION_SOUTH && dir != DIRECTION_EAST;
-    case ICE_CORNER_NORTH_EAST:
+    case TILE_ICE_CORNER_NORTH_EAST:
       return dir != DIRECTION_SOUTH && dir != DIRECTION_WEST;
-    case ICE_CORNER_SOUTH_WEST:
+    case TILE_ICE_CORNER_SOUTH_WEST:
       return dir != DIRECTION_NORTH && dir != DIRECTION_EAST;
-    case ICE_CORNER_SOUTH_EAST:
+    case TILE_ICE_CORNER_SOUTH_EAST:
       return dir != DIRECTION_NORTH && dir != DIRECTION_WEST;
-    case THIN_WALL_NORTH:
+    case TILE_THIN_WALL_NORTH:
       return dir != DIRECTION_NORTH && dir != DIRECTION_EAST &&
              dir != DIRECTION_WEST;
-    case THIN_WALL_EAST:
+    case TILE_THIN_WALL_EAST:
       return dir != DIRECTION_NORTH && dir != DIRECTION_SOUTH &&
              dir != DIRECTION_EAST;
-    case THIN_WALL_SOUTH:
+    case TILE_THIN_WALL_SOUTH:
       return dir != DIRECTION_SOUTH && dir != DIRECTION_EAST &&
              dir != DIRECTION_WEST;
-    case THIN_WALL_WEST:
+    case TILE_THIN_WALL_WEST:
       return dir != DIRECTION_NORTH && dir != DIRECTION_SOUTH &&
              dir != DIRECTION_WEST;
 
@@ -879,27 +879,27 @@ static bool Actor_can_make_move(Actor* self,
 
   if (!(flags & CMM_NOLEAVECHECK)) {
     switch (Level_cell_get_bottom_floor(level, self->pos)) {
-      case THIN_WALL_NORTH:
+      case TILE_THIN_WALL_NORTH:
         if (dir == DIRECTION_NORTH)
           return false;
         break;
-      case THIN_WALL_WEST:
+      case TILE_THIN_WALL_WEST:
         if (dir == DIRECTION_WEST)
           return false;
         break;
-      case THIN_WALL_SOUTH:
+      case TILE_THIN_WALL_SOUTH:
         if (dir == DIRECTION_SOUTH)
           return false;
         break;
-      case THIN_WALL_EAST:
+      case TILE_THIN_WALL_EAST:
         if (dir == DIRECTION_EAST)
           return false;
         break;
-      case THIN_WALL_SOUTH_EAST:
+      case TILE_THIN_WALL_SOUTH_EAST:
         if (dir & (DIRECTION_SOUTH | DIRECTION_EAST))
           return false;
         break;
-      case TRAP:
+      case TILE_TRAP:
         if (!(self->state & CS_RELEASED))
           return false;
         break;
@@ -908,42 +908,42 @@ static bool Actor_can_make_move(Actor* self,
     }
   }
 
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     TileID floor = Level_cell_get_terrain(level, to);
     if (TileID_impedes_move_into(floor, self, dir))
       return false;
-    if (floor == SOCKET && level->chips_left > 0)
+    if (floor == TILE_SOCKET && level->chips_left > 0)
       return false;
     if (TileID_is_door(floor) && !Level_player_has_item(level, floor))
       return false;
     if (TileID_is_actor(Level_cell_get_top_floor(level, to))) {
       TileID id = TileID_actor_get_id(Level_cell_get_top_floor(level, to));
-      if (id == CHIP || id == SWIMMING_CHIP || id == BLOCK)
+      if (id == CREATURE_CHIP || id == CREATURE_SWIMMING_CHIP || id == CREATURE_BLOCK)
         return false;
     }
-    if (floor == HIDDEN_WALL || floor == BLUE_WALL_FAKE) {
+    if (floor == TILE_HIDDEN_WALL || floor == TILE_BLUE_WALL_FAKE) {
       if (!(flags & CMM_NOEXPOSEWALLS))
-        Level_cell_set_terrain(level, to, WALL);
+        Level_cell_set_terrain(level, to, TILE_WALL);
       return false;
     }
-    if (floor == BLOCK_STATIC) {
+    if (floor == TILE_BLOCK_STATIC) {
       if (!Level_push_block(level, to, dir, flags))
         return false;
       else if (flags & CMM_NOPUSHING)
         return false;
-      if (Level_cell_get_bottom_floor(level, to) == CLONE_MACHINE)
+      if (Level_cell_get_bottom_floor(level, to) == TILE_CLONE_MACHINE)
         return false; /* totally backwards: need to check this first */
       if ((flags & CMM_TELEPORTPUSH) &&
-          Level_cell_get_terrain(level, to) == BLOCK_STATIC)
+          Level_cell_get_terrain(level, to) == TILE_BLOCK_STATIC)
         /* totally backwards: remove "&& cellat(to)->bot.id == Empty)" */
         return true;
       return Actor_can_make_move(self, level, dir, flags | CMM_NOPUSHING);
     }
-  } else if (self->id == BLOCK) {
+  } else if (self->id == CREATURE_BLOCK) {
     TileID floor = Level_cell_get_top_floor(level, to);
     if (TileID_is_actor(floor)) {
       TileID id = TileID_actor_get_id(floor);
-      return id == CHIP || id == SWIMMING_CHIP;
+      return id == CREATURE_CHIP || id == CREATURE_SWIMMING_CHIP;
     }
     if (TileID_impedes_move_into(floor, self, dir))
       return false;
@@ -951,11 +951,11 @@ static bool Actor_can_make_move(Actor* self,
     TileID floor = Level_cell_get_top_floor(level, to);
     if (TileID_is_actor(floor)) {
       TileID id = TileID_actor_get_id(floor);
-      if (id == CHIP || id == SWIMMING_CHIP) {
+      if (id == CREATURE_CHIP || id == CREATURE_SWIMMING_CHIP) {
         floor = Level_cell_get_bottom_floor(level, to);
         if (TileID_is_actor(floor)) {
           id = TileID_actor_get_id(floor);
-          return id == CHIP || id == SWIMMING_CHIP;
+          return id == CREATURE_CHIP || id == CREATURE_SWIMMING_CHIP;
         }
       }
     }
@@ -976,12 +976,12 @@ static bool Actor_can_make_move(Actor* self,
     }
     if (TileID_impedes_move_into(floor, self, dir))
       return false;
-    if (floor == FIRE && (self->id == BUG || self->id == WALKER))
+    if (floor == TILE_FIRE && (self->id == CREATURE_BUG || self->id == CREATURE_WALKER))
       if (!(flags & CMM_NOFIRECHECK))
         return false;
   }
 
-  if (Level_cell_get_bottom_floor(level, to) == CLONE_MACHINE)
+  if (Level_cell_get_bottom_floor(level, to) == TILE_CLONE_MACHINE)
     return false;
 
   return true;
@@ -1002,11 +1002,11 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
 
   if (self->hidden)
     return;
-  if (self->id == BLOCK)
+  if (self->id == CREATURE_BLOCK)
     return;
   if (level->current_tick & 2)
     return;
-  if (self->id == TEETH || self->id == BLOB) {
+  if (self->id == CREATURE_TEETH || self->id == CREATURE_BLOB) {
     if ((level->current_tick + level->init_step_parity) & 4) {
       return;
     }
@@ -1019,7 +1019,7 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
     /* should be a stalled tank */
     TileID floor = Level_cell_get_top_floor(level, self->pos); /* stacked tank patch */
     TileID id = TileID_actor_get_id(floor);
-    if (TileID_is_actor(floor) && (id == CHIP || id == SWIMMING_CHIP))
+    if (TileID_is_actor(floor) && (id == CREATURE_CHIP || id == CREATURE_SWIMMING_CHIP))
       floor = Level_cell_get_bottom_floor(level, self->pos);
     if (!TileID_is_actor(floor) && !TileID_impedes_move_into(floor, self, DIRECTION_NIL))
       self->hidden = true; /* hack with (0,0) movement success */
@@ -1039,25 +1039,25 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
   Direction choices[4] = {DIRECTION_NIL, DIRECTION_NIL, DIRECTION_NIL,
                         DIRECTION_NIL};
 
-  if (floor == CLONE_MACHINE || floor == TRAP) {
+  if (floor == TILE_CLONE_MACHINE || floor == TILE_TRAP) {
     switch (self->id) {
-      case TANK:
-      case BALL:
-      case GLIDER:
-      case FIREBALL:
-      case WALKER:
+      case CREATURE_TANK:
+      case CREATURE_BALL:
+      case CREATURE_GLIDER:
+      case CREATURE_FIREBALL:
+      case CREATURE_WALKER:
         choices[0] = dir;
         break;
-      case BLOB:
+      case CREATURE_BLOB:
         choices[0] = dir;
         choices[1] = Direction_left(dir);
         choices[2] = Direction_back(dir);
         choices[3] = Direction_right(dir);
         Prng_permute4(&level->prng, choices, sizeof(Direction));
         break;
-      case BUG:
-      case PARAMECIUM:
-      case TEETH:
+      case CREATURE_BUG:
+      case CREATURE_PARAMECIUM:
+      case CREATURE_TEETH:
         choices[0] = level->ms_state.controller_dir;
         self->move_decision = level->ms_state.controller_dir;
         return;
@@ -1069,52 +1069,52 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
     }
   } else {
     switch (self->id) {
-      case TANK:
+      case CREATURE_TANK:
         choices[0] = dir;
         break;
-      case BALL:
+      case CREATURE_BALL:
         choices[0] = dir;
         choices[1] = Direction_back(dir);
         break;
-      case GLIDER:
+      case CREATURE_GLIDER:
         choices[0] = dir;
         choices[1] = Direction_left(dir);
         choices[2] = Direction_right(dir);
         choices[3] = Direction_back(dir);
         break;
-      case FIREBALL:
+      case CREATURE_FIREBALL:
         choices[0] = dir;
         choices[1] = Direction_right(dir);
         choices[2] = Direction_left(dir);
         choices[3] = Direction_back(dir);
         break;
-      case WALKER:
+      case CREATURE_WALKER:
         choices[0] = dir;
         choices[1] = Direction_left(dir);
         choices[2] = Direction_back(dir);
         choices[3] = Direction_right(dir);
         Prng_permute3(&level->prng, choices + 1, sizeof(Direction));
         break;
-      case BLOB:
+      case CREATURE_BLOB:
         choices[0] = dir;
         choices[1] = Direction_left(dir);
         choices[2] = Direction_back(dir);
         choices[3] = Direction_right(dir);
         Prng_permute4(&level->prng, choices, sizeof(Direction));
         break;
-      case BUG:
+      case CREATURE_BUG:
         choices[0] = Direction_left(dir);
         choices[1] = dir;
         choices[2] = Direction_right(dir);
         choices[3] = Direction_back(dir);
         break;
-      case PARAMECIUM:
+      case CREATURE_PARAMECIUM:
         choices[0] = Direction_right(dir);
         choices[1] = dir;
         choices[2] = Direction_left(dir);
         choices[3] = Direction_back(dir);
         break;
-      case TEETH:
+      case CREATURE_TEETH:
         Position y = Level_get_chip(level)->pos / MAP_WIDTH - self->pos / MAP_WIDTH;
         Position x = Level_get_chip(level)->pos % MAP_WIDTH - self->pos % MAP_WIDTH;
         Direction n = y < 0 ? DIRECTION_NORTH : y > 0 ? DIRECTION_SOUTH : DIRECTION_NIL;
@@ -1148,14 +1148,14 @@ static void Actor_choose_move_creature(Actor* self, Level* level) {
       return;
   }
 
-  if (self->id == TANK) {
+  if (self->id == CREATURE_TANK) {
     if ((self->state & CS_RELEASED) ||
-      (floor != TRAP /*&& floor != CloneMachine*/)) /* (c) bug: tank clones should stall */
+      (floor != TILE_TRAP /*&& floor != CloneMachine*/)) /* (c) bug: tank clones should stall */
       self->state |= CS_HASMOVED;
     self->move_decision = DIRECTION_NIL; /* handle stacked tanks */
   }
 
-  if (self->id != TANK) /* handle stacked tanks */
+  if (self->id != CREATURE_TANK) /* handle stacked tanks */
     self->move_decision = pdir;
 }
 
@@ -1272,7 +1272,7 @@ static Position Actor_teleport(Actor* self, Level* level, Position start) {
     if (dest == start)
       break;
     MapTile* tile = MapCell_get_top_tile(Level_get_map_cell(level, dest));
-    if (MapTile_get_floor(tile) != TELEPORT ||
+    if (MapTile_get_floor(tile) != TILE_TELEPORT ||
         (MapTile_get_state(tile) & FS_BROKEN))
       continue;
     self->pos = dest;
@@ -1292,7 +1292,7 @@ static Position Actor_teleport(Actor* self, Level* level, Position start) {
 /* Determine the move(s) a creature will make on the current tick.
  */
 static void Actor_choose_move(Actor* self, Level* level) {
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     Actor_choose_move_chip(self, level, self->state & CS_SLIP);
   } else {
     if (self->state & CS_SLIP)
@@ -1309,9 +1309,9 @@ static void Level_activate_cloner(Level* self, Position button_pos) {
   if (pos < 0 || pos >= MAP_WIDTH * MAP_HEIGHT)
     return;
   TileID tileid = Level_cell_get_top_floor(self, pos);
-  if (!TileID_is_actor(tileid) || TileID_actor_get_id(tileid) == CHIP)
+  if (!TileID_is_actor(tileid) || TileID_actor_get_id(tileid) == CREATURE_CHIP)
     return;
-  if (TileID_actor_get_id(tileid) == BLOCK) {
+  if (TileID_actor_get_id(tileid) == CREATURE_BLOCK) {
     Actor* actor = Level_look_up_block(self, pos);
     if (!actor) {
       warn("%d: attempt to clone disembodied block!", self->current_tick);
@@ -1336,7 +1336,7 @@ static void Level_activate_cloner(Level* self, Position button_pos) {
       return;
     }
     actor->state |= CS_CLONING;
-    if (Level_cell_get_bottom_floor(self, pos) == CLONE_MACHINE) {
+    if (Level_cell_get_bottom_floor(self, pos) == TILE_CLONE_MACHINE) {
       MapTile_add_cloning_state(MapCell_get_bottom_tile(Level_get_map_cell(self, pos)));
     }
   }
@@ -1354,7 +1354,7 @@ static void Level_spring_trap(Level* self, Position buttonpos) {
     return;
   }
   TileID id = Level_cell_get_top_floor(self, pos);
-  if (id == BLOCK_STATIC || (MapTile_get_state(MapCell_get_bottom_tile(
+  if (id == TILE_BLOCK_STATIC || (MapTile_get_state(MapCell_get_bottom_tile(
                                  Level_get_map_cell(self, pos))) &
                              FS_HASMUTANT)) {
     Actor* actor = Level_look_up_block(self, pos);
@@ -1398,18 +1398,18 @@ static void Level_handle_buttons(Level* self) {
       continue;
     }
     switch (id) {
-      case BUTTON_TANK:
+      case TILE_BUTTON_TANK:
         Level_add_sfx(self, SND_BUTTON_PUSHED);
         Level_turn_tanks(self, NULL);
         break;
-      case BUTTON_TOGGLE:
+      case TILE_BUTTON_TOGGLE:
         Level_toggle_walls(self);
         break;
-      case BUTTON_CLONE:
+      case TILE_BUTTON_CLONE:
         Level_activate_cloner(self, pos);
         Level_add_sfx(self, SND_BUTTON_PUSHED);
         break;
-      case BUTTON_TRAP:
+      case TILE_BUTTON_TRAP:
         Level_spring_trap(self, pos);
         Level_add_sfx(self, SND_BUTTON_PUSHED);
         break;
@@ -1437,16 +1437,16 @@ static bool Actor_start_movement(Actor* self, Level* level, Direction dir) {
   }
 
   if (!Actor_can_make_move(self, level, dir, 0)) {
-    if (self->id == CHIP || (floor != TRAP && floor != CLONE_MACHINE &&
+    if (self->id == CREATURE_CHIP || (floor != TILE_TRAP && floor != TILE_CLONE_MACHINE &&
                              !(self->state & CS_SLIP))) {
-      if (self->id != CHIP || odir != DIRECTION_NIL)
+      if (self->id != CREATURE_CHIP || odir != DIRECTION_NIL)
         self->direction = dir; /* b2 fix */
       Actor_update_floor(self, level);
     }
     return false;
   }
 
-  if (floor == TRAP) {
+  if (floor == TILE_TRAP) {
     if (!(self->state & CS_RELEASED)) {
       warn("%d: Actor_start_movement from a beartrap without CS_RELEASED set", level->current_tick);
     }
@@ -1478,76 +1478,76 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
   TileID floor = MapTile_get_floor(tile);
   TileID actor_id_top = TileID_actor_get_id(Level_cell_get_top_floor(level, oldpos)); /* Non-existence patch */
   TileID floor_bottom = MapTile_get_floor(tile);
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     switch (floor) {
-      case FLOOR:
+      case TILE_FLOOR:
         MapCell_pop_tile(cell);
         break;
-      case WATER:
+      case TILE_WATER:
         if (!Level_player_has_item(level, floor))
           level->ms_state.chip_status = CHIP_DROWNED;
         break;
-      case FIRE:
+      case TILE_FIRE:
         if (!Level_player_has_item(level, floor))
           level->ms_state.chip_status = CHIP_BURNED;
         break;
-      case DIRT:
+      case TILE_DIRT:
         MapCell_pop_tile(cell);
         break;
-      case BLUE_WALL_REAL:
+      case TILE_BLUE_WALL_REAL:
         MapCell_pop_tile(cell);
         break;
-      case POPUP_WALL:
-        tile->id = WALL;
+      case TILE_POPUP_WALL:
+        tile->id = TILE_WALL;
         break;
-      case DOOR_RED:
-      case DOOR_BLUE:
-      case DOOR_YELLOW:
-      case DOOR_GREEN:
+      case TILE_DOOR_RED:
+      case TILE_DOOR_BLUE:
+      case TILE_DOOR_YELLOW:
+      case TILE_DOOR_GREEN:
         if (!Level_player_has_item(level, floor)) {
           warn("%d: Player entered door %0X without key!", level->current_tick, floor);
         }
-        if (floor != DOOR_GREEN && Level_player_has_item(level, floor)) {
+        if (floor != TILE_DOOR_GREEN && Level_player_has_item(level, floor)) {
           (*Level_player_item_ptr(level, floor)) -= 1;
         }
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_DOOR_OPENED);
         break;
-      case BOOTS_ICE:
-      case BOOTS_FORCE_FLOOR:
-      case BOOTS_FIRE:
-      case BOOTS_WATER:
-      case KEY_RED:
-      case KEY_BLUE:
-      case KEY_YELLOW:
-      case KEY_GREEN:
+      case TILE_BOOTS_ICE:
+      case TILE_BOOTS_FORCE_FLOOR:
+      case TILE_BOOTS_FIRE:
+      case TILE_BOOTS_WATER:
+      case TILE_KEY_RED:
+      case TILE_KEY_BLUE:
+      case TILE_KEY_YELLOW:
+      case TILE_KEY_GREEN:
         if (TileID_is_actor(floor_bottom))
           level->ms_state.chip_status = CHIP_COLLIDED;
         *Level_player_item_ptr(level, floor) += 1;
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_ITEM_COLLECTED);
         break;
-      case THIEF:
-        *Level_player_item_ptr(level, BOOTS_ICE) = 0;
-        *Level_player_item_ptr(level, BOOTS_FORCE_FLOOR) = 0;
-        *Level_player_item_ptr(level, BOOTS_FIRE) = 0;
-        *Level_player_item_ptr(level, BOOTS_WATER) = 0;
+      case TILE_THIEF:
+        *Level_player_item_ptr(level, TILE_BOOTS_ICE) = 0;
+        *Level_player_item_ptr(level, TILE_BOOTS_FORCE_FLOOR) = 0;
+        *Level_player_item_ptr(level, TILE_BOOTS_FIRE) = 0;
+        *Level_player_item_ptr(level, TILE_BOOTS_WATER) = 0;
         Level_add_sfx(level, SND_BOOTS_STOLEN);
         break;
-      case IC_CHIP:
+      case TILE_IC_CHIP:
         if (level->chips_left)
           level->chips_left -= 1;
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_IC_COLLECTED);
         break;
-      case SOCKET:
+      case TILE_SOCKET:
         if (level->chips_left)
           warn("%d: Entered socket with IC Chips still remaining",
                level->current_tick);
         MapCell_pop_tile(cell);
         Level_add_sfx(level, SND_SOCKET_OPENED);
         break;
-      case BOMB:
+      case TILE_BOMB:
         level->ms_state.chip_status = CHIP_BOMBED;
         Level_add_sfx(level, SND_BOMB_EXPLODES);
         break;
@@ -1556,22 +1556,22 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
           level->ms_state.chip_status = CHIP_COLLIDED;
         break;
     }
-  } else if (self->id == BLOCK) {
+  } else if (self->id == CREATURE_BLOCK) {
     switch (floor) {
-      case FLOOR:
+      case TILE_FLOOR:
         MapCell_pop_tile(cell);
         break;
-      case WATER:
-        MapTile_set_floor(tile, DIRT);
+      case TILE_WATER:
+        MapTile_set_floor(tile, TILE_DIRT);
         dead = true;
         Level_add_sfx(level, SND_WATER_SPLASH);
         break;
-      case BOMB:
-        MapTile_set_floor(tile, FLOOR);
+      case TILE_BOMB:
+        MapTile_set_floor(tile, TILE_FLOOR);
         dead = true;
         Level_add_sfx(level, SND_BOMB_EXPLODES);
         break;
-      case TELEPORT:
+      case TILE_TELEPORT:
         if (!(MapTile_get_state(tile) & FS_BROKEN))
           newpos = Actor_teleport(self, level, newpos);
         break;
@@ -1579,7 +1579,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
         break;
     }
     TileID id = Level_cell_get_top_floor(level, oldpos);
-    if (TileID_is_actor(id) && TileID_actor_get_id(id) == CHIP) {
+    if (TileID_is_actor(id) && TileID_actor_get_id(id) == CREATURE_CHIP) {
       self->state |= CS_MUTANT;
     }
   } else {
@@ -1588,20 +1588,20 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
       floor = MapTile_get_floor(tile);
     }
     switch (floor) {
-      case WATER:
-        if (actor_id_top != GLIDER) /* use actor_id_top with Non-existence patch */
+      case TILE_WATER:
+        if (actor_id_top != CREATURE_GLIDER) /* use actor_id_top with Non-existence patch */
           dead = true;
         break;
-      case FIRE:
-        if (actor_id_top != FIREBALL) /* use actor_id_top with Non-existence patch */
+      case TILE_FIRE:
+        if (actor_id_top != CREATURE_FIREBALL) /* use actor_id_top with Non-existence patch */
           dead = true;
         break;
-      case BOMB:
-        MapTile_set_floor(tile, FLOOR);
+      case TILE_BOMB:
+        MapTile_set_floor(tile, TILE_FLOOR);
         dead = true;
         Level_add_sfx(level, SND_BOMB_EXPLODES);
         break;
-      case TELEPORT:
+      case TILE_TELEPORT:
         if (!(MapTile_get_state(tile) & FS_BROKEN))
           newpos = Actor_teleport(self, level, newpos);
         break;
@@ -1611,24 +1611,24 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
   }
 
   MapCell* old_cell = Level_get_map_cell(level, oldpos);
-  if (MapCell_get_bottom_floor(old_cell) != CLONE_MACHINE || self->id == CHIP)
+  if (MapCell_get_bottom_floor(old_cell) != TILE_CLONE_MACHINE || self->id == CREATURE_CHIP)
     MapCell_pop_tile(old_cell);
   if (dead) {
     Actor_remove(self, level);
-    if (MapCell_get_bottom_floor(old_cell) == CLONE_MACHINE) {
+    if (MapCell_get_bottom_floor(old_cell) == TILE_CLONE_MACHINE) {
       MapTile_remove_cloning_state(MapCell_get_bottom_tile(old_cell));
     }
     return;
   }
 
-  if (self->id == CHIP && floor == TELEPORT && !(tile->state & FS_BROKEN)) {
+  if (self->id == CREATURE_CHIP && floor == TILE_TELEPORT && !(tile->state & FS_BROKEN)) {
     Position i = newpos;
     newpos = Actor_teleport(self, level, newpos);
     if (true || newpos != i) {
       /* Convergence Patch */
       /* no idea, but Icysanity lvl 1 requires newpos=i to work */
       Level_add_sfx(level, SND_TELEPORTING);
-      if (Level_cell_get_terrain(level, newpos) == BLOCK_STATIC) {
+      if (Level_cell_get_terrain(level, newpos) == TILE_BLOCK_STATIC) {
         if (level->ms_state.chip_last_slip_dir == DIRECTION_NIL) {
           /* // these seem cosmetic/superfluous with new patch
           cr->dir = NORTH;
@@ -1651,20 +1651,20 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
 
   tile = MapCell_get_bottom_tile(cell);
   switch (floor) {
-    case BUTTON_TANK:
+    case TILE_BUTTON_TANK:
       if (self->state & CS_DEFERPUSH)
         MapTile_add_button_down_state(tile);
       else
         Level_turn_tanks(level, self);
       Level_add_sfx(level, SND_BUTTON_PUSHED);
       break;
-    case BUTTON_TOGGLE:
+    case TILE_BUTTON_TOGGLE:
       if (self->state & CS_DEFERPUSH)
         MapTile_add_button_down_state(tile);
       else
         Level_toggle_walls(level);
       break;
-    case BUTTON_CLONE:
+    case TILE_BUTTON_CLONE:
       self->state |= CS_SPONTANEOUS;
       if (self->state & CS_DEFERPUSH)
         MapTile_add_button_down_state(tile);
@@ -1673,7 +1673,7 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
       Level_add_sfx(level, SND_BUTTON_PUSHED);
       self->state &= ~CS_SPONTANEOUS; /* Hack with SGG */
       break;
-    case BUTTON_TRAP:
+    case TILE_BUTTON_TRAP:
       if (self->state & CS_DEFERPUSH)
         MapTile_add_button_down_state(tile);
       else
@@ -1685,17 +1685,17 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
   }
   self->pos = newpos;
 
-  if (MapCell_get_bottom_floor(old_cell) == CLONE_MACHINE && self->id == BLOCK &&
-      MapCell_get_top_floor(old_cell) != BLOCK_STATIC)
+  if (MapCell_get_bottom_floor(old_cell) == TILE_CLONE_MACHINE && self->id == CREATURE_BLOCK &&
+      MapCell_get_top_floor(old_cell) != TILE_BLOCK_STATIC)
     blockcloning = true; /* Squish patch */
 
-  if (MapCell_get_bottom_floor(old_cell) == CLONE_MACHINE)
+  if (MapCell_get_bottom_floor(old_cell) == TILE_CLONE_MACHINE)
     MapTile_remove_cloning_state(MapCell_get_bottom_tile(old_cell));
 
-  if (floor == TRAP) {
+  if (floor == TILE_TRAP) {
     if (Level_is_trap_open(level, newpos, oldpos))
       self->state |= CS_RELEASED;
-  } else if (Level_cell_get_bottom_floor(level, newpos) == TRAP) {
+  } else if (Level_cell_get_bottom_floor(level, newpos) == TILE_TRAP) {
     for (size_t i = 0; i < level->trap_connections.length; i += 1) {
       if (level->trap_connections.items[i].to == newpos) {
         self->state |= CS_RELEASED;
@@ -1704,22 +1704,22 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
     }
   }
 
-  if (self->id == CHIP) {
+  if (self->id == CREATURE_CHIP) {
     if (Level_get_mouse_goal(level) == self->pos)
       Level_cancel_mouse_goal(level);
     if (level->ms_state.chip_status != CHIP_OKAY &&
         level->ms_state.chip_status != CHIP_SQUISHED)
       return; /* CHIP_SQUISHED added with Squish patch */
-    if (MapCell_get_bottom_floor(cell) == EXIT) {
+    if (MapCell_get_bottom_floor(cell) == TILE_EXIT) {
       level->level_complete = true;
       return;
     }
   } else {
     if (TileID_is_actor(MapCell_get_bottom_floor(cell))) {
       TileID id = MapCell_get_bottom_floor(cell);
-      if (TileID_actor_get_id(id) == CHIP ||
-          TileID_actor_get_id(id) == SWIMMING_CHIP) {
-        if (self->id != BLOCK || !blockcloning) /* Squish patch */
+      if (TileID_actor_get_id(id) == CREATURE_CHIP ||
+          TileID_actor_get_id(id) == CREATURE_SWIMMING_CHIP) {
+        if (self->id != CREATURE_BLOCK || !blockcloning) /* Squish patch */
           level->ms_state.chip_status = CHIP_COLLIDED;
         else
           level->ms_state.chip_status = CHIP_SQUISHED; /* Squish patch */
@@ -1730,13 +1730,13 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
 
   bool was_slipping = self->state & (CS_SLIP | CS_SLIDE);
 
-  if (floor == TELEPORT) {
+  if (floor == TILE_TELEPORT) {
     Actor_start_floor_movement(self, level, floor, DIRECTION_NIL); /* NIL for tank reversal patch */
-  } else if (TileID_is_ice(floor) && (self->id != CHIP || !Level_player_has_item(level, BOOTS_ICE))) {
+  } else if (TileID_is_ice(floor) && (self->id != CREATURE_CHIP || !Level_player_has_item(level, TILE_BOOTS_ICE))) {
     Actor_start_floor_movement(self, level, floor, DIRECTION_NIL); /* NIL for tank reversal patch */
-  } else if (TileID_is_slide(floor) && (self->id != CHIP || !Level_player_has_item(level, BOOTS_FORCE_FLOOR))) {
+  } else if (TileID_is_slide(floor) && (self->id != CREATURE_CHIP || !Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR))) {
     Actor_start_floor_movement(self, level, floor, DIRECTION_NIL); /* NIL for tank reversal patch */
-  } else if (floor == TRAP && self->id == BLOCK && was_slipping) {
+  } else if (floor == TILE_TRAP && self->id == CREATURE_BLOCK && was_slipping) {
     Actor_start_floor_movement(self, level, floor, DIRECTION_NIL); /* NIL for tank reversal patch */
     if (self->state & CS_MUTANT) {
       MapTile_add_mutant_state(MapCell_get_bottom_tile(cell));
@@ -1744,12 +1744,12 @@ static void Actor_end_movement(Actor* self, Level* level, Direction dir) {
   } else {
     /* changes for MSCC-style sliplist */
     self->state &= ~(CS_SLIP | CS_SLIDE);
-    if (was_slipping && self->id != CHIP) {
+    if (was_slipping && self->id != CREATURE_CHIP) {
       level->ms_state.mscc_slippers -= 1;
       Level_remove_actor_from_slip_list(level, self);
     }
   }
-  if (!was_slipping && (self->state & (CS_SLIP | CS_SLIDE)) && self->id != CHIP)
+  if (!was_slipping && (self->state & (CS_SLIP | CS_SLIDE)) && self->id != CREATURE_CHIP)
     level->ms_state.controller_dir = Level_get_actor_slip_dir(level, self);
 }
 
@@ -1759,11 +1759,11 @@ static bool Actor_advance_movement(Actor* self, Level* level, Direction dir) {
   if (dir == DIRECTION_NIL)
     return true;
 
-  if (self->id == CHIP)
+  if (self->id == CREATURE_CHIP)
     level->ms_state.chip_ticks_since_moved = 0;
 
   if (!Actor_start_movement(self, level, dir)) {
-    if (self->id == CHIP) {
+    if (self->id == CREATURE_CHIP) {
       Level_add_sfx(level, SND_CANT_MOVE);
       Level_reset_buttons(level);
       Level_cancel_mouse_goal(level);
@@ -1772,7 +1772,7 @@ static bool Actor_advance_movement(Actor* self, Level* level, Direction dir) {
   }
 
   Actor_end_movement(self, level, dir);
-  if (self->id == CHIP)
+  if (self->id == CREATURE_CHIP)
     Level_handle_buttons(level);
 
   return true;
@@ -1791,11 +1791,11 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
     Actor* actor = self->ms_state.slip_list[n].actor;
     if (!(actor->state & (CS_SLIP | CS_SLIDE)))
       continue;
-    if (actor->id != CHIP)
+    if (actor->id != CREATURE_CHIP)
       continue; /* new, non-Chip ignored */
     Direction slipdir = self->ms_state.slip_list[n].direction;
     if (slipdir == DIRECTION_NIL) { /* Convergence Patch */
-      Level_cell_set_top_floor(self, actor->pos, TileID_actor_with_dir(CHIP, DIRECTION_NORTH));
+      Level_cell_set_top_floor(self, actor->pos, TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
       continue;
     }
     self->ms_state.chip_last_slip_dir = slipdir;
@@ -1812,7 +1812,7 @@ static void Level_chip_floor_movements(Level* self) { /* split into two */
         advanced = Actor_advance_movement(actor, self, slipdir); /* again useful with ac */
         if (advanced)
           actor->state &= ~CS_HASMOVED;
-      } else if (floor == TELEPORT || floor == BLOCK_STATIC) {
+      } else if (floor == TILE_TELEPORT || floor == TILE_BLOCK_STATIC) {
         self->ms_state.chip_last_slip_dir = slipdir = Direction_back(slipdir);
         if (Actor_advance_movement(actor, self, slipdir))
           actor->state &= ~CS_HASMOVED;
@@ -1838,7 +1838,7 @@ static void Level_non_chip_floor_movements(Level* self) { /* split into two */
   for (uint32_t n = 0; n < self->ms_state.slips_n;) {
     uint32_t oldmsccslippers = self->ms_state.mscc_slippers;
     Actor* actor = self->ms_state.slip_list[n].actor;
-    if (actor->id == CHIP) {
+    if (actor->id == CREATURE_CHIP) {
       /* new splitting */
       n += 1;
       continue;
@@ -1940,10 +1940,10 @@ static bool ms_init_level(Level* self) {
   while (pos < MAP_WIDTH * MAP_HEIGHT) {
     MapCell* cell = Level_get_map_cell(self, pos);
     if (TileID_is_terrain(MapCell_get_top_floor(cell)) ||
-        TileID_actor_get_id(MapCell_get_top_floor(cell)) == CHIP ||
-        TileID_actor_get_id(MapCell_get_top_floor(cell)) == BLOCK) {
-      if (MapCell_get_bottom_floor(cell) == TELEPORT || MapCell_get_bottom_floor(cell) == TOGGLE_DOOR_OPEN ||
-          MapCell_get_bottom_floor(cell) == TOGGLE_DOOR_CLOSED) {
+        TileID_actor_get_id(MapCell_get_top_floor(cell)) == CREATURE_CHIP ||
+        TileID_actor_get_id(MapCell_get_top_floor(cell)) == CREATURE_BLOCK) {
+      if (MapCell_get_bottom_floor(cell) == TILE_TELEPORT || MapCell_get_bottom_floor(cell) == TILE_TOGGLE_DOOR_OPEN ||
+          MapCell_get_bottom_floor(cell) == TILE_TOGGLE_DOOR_CLOSED) {
         MapTile_add_broken_state(MapCell_get_bottom_tile(cell));
       }
     }
@@ -1953,7 +1953,7 @@ static bool ms_init_level(Level* self) {
 
   Actor* chip = Level_create_actor(self);
   chip->pos = 0;
-  chip->id = CHIP;
+  chip->id = CREATURE_CHIP;
   chip->direction = DIRECTION_SOUTH;
   for (uint32_t n = 0; n < self->ms_state.init_actors_n; n += 1) {
     pos = self->ms_state.init_actor_list[n];
@@ -1969,12 +1969,12 @@ static bool ms_init_level(Level* self) {
       warn("level has no creature at location (%d %d)", pos % MAP_WIDTH, pos / MAP_WIDTH);
       continue;
     }
-    if (TileID_actor_get_id(top_id) != BLOCK && bottom_id != CLONE_MACHINE) {
+    if (TileID_actor_get_id(top_id) != CREATURE_BLOCK && bottom_id != TILE_CLONE_MACHINE) {
       Actor* actor = Level_create_actor(self);
       actor->pos = pos;
       actor->id = TileID_actor_get_id(top_id);
       actor->direction = TileID_actor_get_dir(top_id);
-      if (TileID_is_actor(bottom_id) && TileID_actor_get_id(bottom_id) == CHIP) {
+      if (TileID_is_actor(bottom_id) && TileID_actor_get_id(bottom_id) == CREATURE_CHIP) {
         chip->pos = pos;
         chip->direction = TileID_actor_get_dir(bottom_id);
       }
@@ -1989,7 +1989,7 @@ static bool ms_init_level(Level* self) {
     if (MapTile_get_state(MapCell_get_top_tile(cell)) & FS_MARKER) {
       MapTile_remove_marker_state(top_tile);
     } else if (TileID_is_actor(MapTile_get_floor(top_tile)) &&
-               TileID_actor_get_id(MapTile_get_floor(top_tile)) == CHIP) {
+               TileID_actor_get_id(MapTile_get_floor(top_tile)) == CREATURE_CHIP) {
       chip->pos = pos;
       chip->direction = TileID_actor_get_dir(MapTile_get_floor(bottom_tile));
     }
@@ -2000,7 +2000,7 @@ static bool ms_init_level(Level* self) {
   for (uint8_t n = 0; n < traps->length; n += 1) {
     if (Level_is_trap_button_down(self, traps->items[n].from) ||
         ((traps->items[n].to == Level_get_chip(self)->pos
-          || Level_cell_get_top_floor(self, traps->items[n].to) == BLOCK_STATIC)
+          || Level_cell_get_top_floor(self, traps->items[n].to) == TILE_BLOCK_STATIC)
         && traps->items[n].init_state)) {
       Level_spring_trap(self, traps->items[n].from);
     }
@@ -2052,11 +2052,11 @@ static void ms_tick_level(Level* self) {
     self->ms_state.controller_dir = DIRECTION_NIL;
     for (uint32_t n = 0; n < self->actors_n; n += 1) {
       Actor* cr = &self->actors[n];
-      if (!cr->hidden && cr->id != CHIP && !(self->current_tick & 3) &&
+      if (!cr->hidden && cr->id != CREATURE_CHIP && !(self->current_tick & 3) &&
           self->ms_state.chip_status == CHIP_SQUISHED && !self->level_complete) {
         self->ms_state.chip_status = CHIP_SQUISHED_DEATH; /* Squish patch */
       }
-      if (cr->hidden || (cr->state & CS_CLONING) || cr->id == CHIP) {
+      if (cr->hidden || (cr->state & CS_CLONING) || cr->id == CREATURE_CHIP) {
         continue;
       }
       Actor_choose_move(cr, self);

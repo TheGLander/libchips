@@ -93,37 +93,37 @@ uint16_t LevelSet_get_level_idx_by_pass(LevelSet const* self, char const pass[10
 }
 
 
-static TileID const DAT_TILDID_MAP[] = {
+static TileID const dat_tileid_map[] = {
     // 0x00
-    FLOOR, WALL, IC_CHIP, WATER, FIRE, INVISIBLE_WALL, THIN_WALL_NORTH, THIN_WALL_WEST,
-    THIN_WALL_SOUTH, THIN_WALL_EAST, BLOCK_STATIC, DIRT, ICE, FORCE_FLOOR_SOUTH,
+    TILE_FLOOR, TILE_WALL, TILE_IC_CHIP, TILE_WATER, TILE_FIRE, TILE_INVISIBLE_WALL, TILE_THIN_WALL_NORTH, TILE_THIN_WALL_WEST,
+    TILE_THIN_WALL_SOUTH, TILE_THIN_WALL_EAST, TILE_BLOCK_STATIC, TILE_DIRT, TILE_ICE, TILE_FORCE_FLOOR_SOUTH,
     // 0x10
-    north(BLOCK), west(BLOCK), south(BLOCK), east(BLOCK), FORCE_FLOOR_NORTH,
-    FORCE_FLOOR_EAST, FORCE_FLOOR_WEST, EXIT, DOOR_BLUE, DOOR_RED, DOOR_GREEN, DOOR_YELLOW,
-    ICE_CORNER_SOUTH_EAST, ICE_CORNER_SOUTH_WEST, ICE_CORNER_NORTH_WEST, ICE_CORNER_NORTH_EAST,
-    BLUE_WALL_REAL, BLUE_WALL_FAKE,
+    north(CREATURE_BLOCK), west(CREATURE_BLOCK), south(CREATURE_BLOCK), east(CREATURE_BLOCK), TILE_FORCE_FLOOR_NORTH,
+    TILE_FORCE_FLOOR_EAST, TILE_FORCE_FLOOR_WEST, TILE_EXIT, TILE_DOOR_BLUE, TILE_DOOR_RED, TILE_DOOR_GREEN, TILE_DOOR_YELLOW,
+    TILE_ICE_CORNER_SOUTH_EAST, TILE_ICE_CORNER_SOUTH_WEST, TILE_ICE_CORNER_NORTH_WEST, TILE_ICE_CORNER_NORTH_EAST,
+    TILE_BLUE_WALL_REAL, TILE_BLUE_WALL_FAKE,
     // 0x20
-    OVERLAY_BUFFER, THIEF, SOCKET, BUTTON_TOGGLE, BUTTON_CLONE, TOGGLE_DOOR_CLOSED,
-    TOGGLE_DOOR_OPEN, BUTTON_TRAP, BUTTON_TANK, TELEPORT, BOMB, TRAP,
-    HIDDEN_WALL, GRAVEL, POPUP_WALL, HINT,
+    TILE_OVERLAY_BUFFER, TILE_THIEF, TILE_SOCKET, TILE_BUTTON_TOGGLE, TILE_BUTTON_CLONE, TILE_TOGGLE_DOOR_CLOSED,
+    TILE_TOGGLE_DOOR_OPEN, TILE_BUTTON_TRAP, TILE_BUTTON_TANK, TILE_TELEPORT, TILE_BOMB, TILE_TRAP,
+    TILE_HIDDEN_WALL, TILE_GRAVEL, TILE_POPUP_WALL, TILE_HINT,
     // 0x30
-    THIN_WALL_SOUTH_EAST, CLONE_MACHINE, FORCE_FLOOR_RANDOM, DROWNED_CHIP, BURNED_CHIP,
-    BOMBED_CHIP, UNUSED_TILE_1, UNUSED_TILE_2, ICE_BLOCK, EXITED_CHIP, EXIT_ANIM_1, EXIT_ANIM_2,
-    north(SWIMMING_CHIP), west(SWIMMING_CHIP), south(SWIMMING_CHIP),
-    east(SWIMMING_CHIP),
+    TILE_THIN_WALL_SOUTH_EAST, TILE_CLONE_MACHINE, TILE_FORCE_FLOOR_RANDOM, TILE_DROWNED_CHIP, TILE_BURNED_CHIP,
+    TILE_BOMBED_CHIP, TILE_UNUSED_1, TILE_UNUSED_2, TILE_ICE_BLOCK, TILE_EXITED_CHIP, TILE_EXIT_ANIM_1, TILE_EXIT_ANIM_2,
+    north(CREATURE_SWIMMING_CHIP), west(CREATURE_SWIMMING_CHIP), south(CREATURE_SWIMMING_CHIP),
+    east(CREATURE_SWIMMING_CHIP),
     // 0x40
-    north(BUG), west(BUG), south(BUG), east(BUG), north(FIREBALL),
-    west(FIREBALL), south(FIREBALL), east(FIREBALL), north(BALL), west(BALL),
-    south(BALL), east(BALL), north(TANK), west(TANK), south(TANK), east(TANK),
+    north(CREATURE_BUG), west(CREATURE_BUG), south(CREATURE_BUG), east(CREATURE_BUG), north(CREATURE_FIREBALL),
+    west(CREATURE_FIREBALL), south(CREATURE_FIREBALL), east(CREATURE_FIREBALL), north(CREATURE_BALL), west(CREATURE_BALL),
+    south(CREATURE_BALL), east(CREATURE_BALL), north(CREATURE_TANK), west(CREATURE_TANK), south(CREATURE_TANK), east(CREATURE_TANK),
     // 0x50
-    north(GLIDER), west(GLIDER), south(GLIDER), east(GLIDER), north(TEETH),
-    west(TEETH), south(TEETH), east(TEETH), north(WALKER), west(WALKER),
-    south(WALKER), east(WALKER), north(BLOB), west(BLOB), south(BLOB),
-    east(BLOB),
+    north(CREATURE_GLIDER), west(CREATURE_GLIDER), south(CREATURE_GLIDER), east(CREATURE_GLIDER), north(CREATURE_TEETH),
+    west(CREATURE_TEETH), south(CREATURE_TEETH), east(CREATURE_TEETH), north(CREATURE_WALKER), west(CREATURE_WALKER),
+    south(CREATURE_WALKER), east(CREATURE_WALKER), north(CREATURE_BLOB), west(CREATURE_BLOB), south(CREATURE_BLOB),
+    east(CREATURE_BLOB),
     // 0x60
-    north(PARAMECIUM), west(PARAMECIUM), south(PARAMECIUM), east(PARAMECIUM),
-    KEY_BLUE, KEY_RED, KEY_GREEN, KEY_YELLOW, BOOTS_WATER, BOOTS_FIRE,
-    BOOTS_ICE, BOOTS_FORCE_FLOOR, north(CHIP), west(CHIP), south(CHIP), east(CHIP)
+    north(CREATURE_PARAMECIUM), west(CREATURE_PARAMECIUM), south(CREATURE_PARAMECIUM), east(CREATURE_PARAMECIUM),
+    TILE_KEY_BLUE, TILE_KEY_RED, TILE_KEY_GREEN, TILE_KEY_YELLOW, TILE_BOOTS_WATER, TILE_BOOTS_FIRE,
+    TILE_BOOTS_ICE, TILE_BOOTS_FORCE_FLOOR, north(CREATURE_CHIP), west(CREATURE_CHIP), south(CREATURE_CHIP), east(CREATURE_CHIP)
 };
 
 enum CllChunkTypes {
@@ -346,11 +346,11 @@ Result_LevelPtr LevelMetadata_make_level(LevelMetadata const* self,
   }
   for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     uint8_t ccl_tile_id = uncompressed_field[pos];
-    if (ccl_tile_id >= lengthof(DAT_TILDID_MAP)) {
+    if (ccl_tile_id >= lengthof(dat_tileid_map)) {
       free(level);
       return res_err(LevelPtr, "Unknown CCL tile id %02X", ccl_tile_id);
     }
-    level->map[pos].top.id = DAT_TILDID_MAP[ccl_tile_id];
+    level->map[pos].top.id = dat_tileid_map[ccl_tile_id];
   }
   if (!uncompress_field(uncompressed_field, self->layer_bottom,
                         self->layer_bottom_size)) {
@@ -359,11 +359,11 @@ Result_LevelPtr LevelMetadata_make_level(LevelMetadata const* self,
   }
   for (Position pos = 0; pos < MAP_WIDTH * MAP_HEIGHT; pos += 1) {
     uint8_t ccl_tile_id = uncompressed_field[pos];
-    if (ccl_tile_id >= lengthof(DAT_TILDID_MAP)) {
+    if (ccl_tile_id >= lengthof(dat_tileid_map)) {
       free(level);
       return res_err(LevelPtr, "Unknown CCL tile id %02X", ccl_tile_id);
     }
-    level->map[pos].bottom.id = DAT_TILDID_MAP[ccl_tile_id];
+    level->map[pos].bottom.id = dat_tileid_map[ccl_tile_id];
   }
 
   level->ruleset = ruleset;

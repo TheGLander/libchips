@@ -34,7 +34,7 @@ uint32_t TWSMetadata_get_length(TWSMetadata const* self) {
   return self->num_ticks;
 }
 
-static GameInput const INPUT_LOOKUP[] = {INPUT_NORTH, INPUT_WEST, INPUT_SOUTH, INPUT_EAST,
+static GameInput const input_lookup[] = {INPUT_NORTH, INPUT_WEST, INPUT_SOUTH, INPUT_EAST,
     INPUT_NORTH_WEST, INPUT_SOUTH_WEST, INPUT_NORTH_EAST, INPUT_SOUTH_EAST};
 
 Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
@@ -42,8 +42,6 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
     return res_err(GameInputList, "Solution has no inputs");
   }
 
-  static_assert(((GameInput) DIRECTION_NIL) == 0);
-  static_assert(INPUT_NIL == 0);
   GameInputList input_list = GameInputList_new(self->num_ticks);
   uint32_t tick = 0;
   size_t size = self->compressed_inputs.count;
@@ -56,9 +54,9 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
     data += 1;
     size -= 1;
     if ((first_byte & 0b11) == 0b00) {
-      input = INPUT_LOOKUP[(first_byte >> 2) & 0b11];
-      GameInput input2 = INPUT_LOOKUP[(first_byte >> 4) & 0b11];
-      GameInput input3 = INPUT_LOOKUP[(first_byte >> 6) & 0b11];
+      input = input_lookup[(first_byte >> 2) & 0b11];
+      GameInput input2 = input_lookup[(first_byte >> 4) & 0b11];
+      GameInput input3 = input_lookup[(first_byte >> 6) & 0b11];
 
       GameInputList_append(&input_list, INPUT_NIL);
       GameInputList_append(&input_list, INPUT_NIL);
@@ -78,13 +76,13 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
     } else {
       if ((first_byte & 0b11) == 0b01) {
         time = first_byte >> 5;
-        input = INPUT_LOOKUP[(first_byte >> 2) & 0b111];
+        input = input_lookup[(first_byte >> 2) & 0b111];
       } else if ((first_byte & 0b11) == 0b10) {
         uint8_t second_byte = *data;
         data += 1;
         size -= 1;
         time = second_byte << 3 | first_byte >> 5;
-        input = INPUT_LOOKUP[(first_byte >> 2) & 0b111];
+        input = input_lookup[(first_byte >> 2) & 0b111];
       } else /*if ((first_byte & 0b11) == 0b11)*/ {
         if (!(first_byte & 0b10000)) {
           uint8_t second_byte = data[0];
@@ -92,7 +90,7 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
           uint8_t fourth_byte = data[2];
           data += 3;
           size -= 3;
-          input = INPUT_LOOKUP[(first_byte >> 2) & 0b11];
+          input = input_lookup[(first_byte >> 2) & 0b11];
           time = ((fourth_byte & 0b00001111) << 19 | third_byte << 11 | second_byte << 3 | first_byte >> 5);
         } else {
           uint8_t num_bytes = ((first_byte >> 2) & 0b11) + 1;
@@ -303,7 +301,7 @@ Result_TWSSetPtr parse_tws(uint8_t const* data, size_t data_len) {
         level.other_flags = *data;
         data += 1;
         uint8_t slide_step = *data;
-        level.rff_dir = INPUT_LOOKUP[slide_step & 0b111];
+        level.rff_dir = input_lookup[slide_step & 0b111];
         if (Direction_is_diagonal(level.rff_dir)) {
           return get_error(set, "RFF direction is not cardinal");
         }

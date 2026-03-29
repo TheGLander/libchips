@@ -19,12 +19,12 @@
 // A really fun trick to be able to define enums with a dedicated underlying type, back-falling to a direct typedef
 // pre C23
 #if __STDC_VERSION__ >= 202311L
-#define ENUM_UNDERLYING(name, underlying) \
+#define ENUM_DEF(name, underlying) \
 enum name : underlying; \
 typedef enum name name; \
 enum name : underlying
 #else
-#define ENUM_UNDERLYING(name, underlying) \
+#define ENUM_DEF(name, underlying) \
 typedef underlying name; \
 enum
 #endif

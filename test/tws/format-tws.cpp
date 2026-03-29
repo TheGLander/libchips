@@ -410,6 +410,10 @@ namespace {
     1,
   };
 
+  TEST(FormatTws, Defs) {
+    ASSERT_EQ(static_cast<GameInput>(DIRECTION_NIL), 0);
+    ASSERT_EQ(INPUT_NIL, 0);
+  }
 
   TEST(FormatTws, EmptyFile) {
     uint8_t data[0];

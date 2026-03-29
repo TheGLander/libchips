@@ -5,34 +5,34 @@
 #include "misc.h"
 
 bool TileID_is_slide(TileID id) {
-  return id >= FORCE_FLOOR_NORTH && id <= FORCE_FLOOR_RANDOM;
+  return id >= TILE_FORCE_FLOOR_NORTH && id <= TILE_FORCE_FLOOR_RANDOM;
 }
 bool TileID_is_ice(TileID id) {
-  return id >= ICE && id <= ICE_CORNER_SOUTH_EAST;
+  return id >= TILE_ICE && id <= TILE_ICE_CORNER_SOUTH_EAST;
 }
 bool TileID_is_door(TileID id) {
-  return id >= DOOR_RED && id <= DOOR_GREEN;
+  return id >= TILE_DOOR_RED && id <= TILE_DOOR_GREEN;
 }
 bool TileID_is_key(TileID id) {
-  return id >= KEY_RED && id <= KEY_GREEN;
+  return id >= TILE_KEY_RED && id <= TILE_KEY_GREEN;
 }
 bool TileID_is_boots(TileID id) {
-  return id >= BOOTS_ICE && id <= BOOTS_WATER;
+  return id >= TILE_BOOTS_ICE && id <= TILE_BOOTS_WATER;
 }
 bool TileID_is_ms_special(TileID id) {
-  return id >= DROWNED_CHIP && id <= OVERLAY_BUFFER;
+  return id >= TILE_DROWNED_CHIP && id <= TILE_OVERLAY_BUFFER;
 }
 bool TileID_is_terrain(TileID id) {
   return id <= TILE_FINAL;
 }
 bool TileID_is_actor(TileID id) {
-  return id >= CHIP && id < ANIM_WATER;
+  return id >= CREATURE_CHIP && id < ANIM_WATER;
 }
 bool TileID_is_animation(TileID id) {
   return id >= ANIM_WATER && id <= ANIM_UNUSED;
 }
 bool TileID_is_block(TileID id) {
-  return id == BLOCK_STATIC || TileID_actor_get_id(id) == BLOCK;
+  return id == TILE_BLOCK_STATIC || TileID_actor_get_id(id) == CREATURE_BLOCK;
 }
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;
@@ -241,37 +241,37 @@ Actor const* Level_get_chip_actor_const(Level const* self) {
 }
 uint8_t* Level_player_item_ptr(Level* level, TileID id) {
   switch (id) {
-    case KEY_RED:
-    case DOOR_RED:
+    case TILE_KEY_RED:
+    case TILE_DOOR_RED:
       return &level->player_keys[0];
-    case KEY_BLUE:
-    case DOOR_BLUE:
+    case TILE_KEY_BLUE:
+    case TILE_DOOR_BLUE:
       return &level->player_keys[1];
-    case KEY_YELLOW:
-    case DOOR_YELLOW:
+    case TILE_KEY_YELLOW:
+    case TILE_DOOR_YELLOW:
       return &level->player_keys[2];
-    case KEY_GREEN:
-    case DOOR_GREEN:
+    case TILE_KEY_GREEN:
+    case TILE_DOOR_GREEN:
       return &level->player_keys[3];
-    case BOOTS_ICE:
-    case ICE:
-    case ICE_CORNER_NORTH_WEST:
-    case ICE_CORNER_NORTH_EAST:
-    case ICE_CORNER_SOUTH_WEST:
-    case ICE_CORNER_SOUTH_EAST:
+    case TILE_BOOTS_ICE:
+    case TILE_ICE:
+    case TILE_ICE_CORNER_NORTH_WEST:
+    case TILE_ICE_CORNER_NORTH_EAST:
+    case TILE_ICE_CORNER_SOUTH_WEST:
+    case TILE_ICE_CORNER_SOUTH_EAST:
       return &level->player_boots[0];
-    case BOOTS_FORCE_FLOOR:
-    case FORCE_FLOOR_NORTH:
-    case FORCE_FLOOR_WEST:
-    case FORCE_FLOOR_SOUTH:
-    case FORCE_FLOOR_EAST:
-    case FORCE_FLOOR_RANDOM:
+    case TILE_BOOTS_FORCE_FLOOR:
+    case TILE_FORCE_FLOOR_NORTH:
+    case TILE_FORCE_FLOOR_WEST:
+    case TILE_FORCE_FLOOR_SOUTH:
+    case TILE_FORCE_FLOOR_EAST:
+    case TILE_FORCE_FLOOR_RANDOM:
       return &level->player_boots[1];
-    case BOOTS_FIRE:
-    case FIRE:
+    case TILE_BOOTS_FIRE:
+    case TILE_FIRE:
       return &level->player_boots[2];
-    case BOOTS_WATER:
-    case WATER:
+    case TILE_BOOTS_WATER:
+    case TILE_WATER:
       return &level->player_boots[3];
     default:
       return NULL;
