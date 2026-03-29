@@ -32,8 +32,8 @@ typedef struct TWSMetadata {
 uint16_t TWSMetadata_get_level_num(TWSMetadata const* self);
 void TWSMetadata_get_password(TWSMetadata const* self, char pass_buf[4]);
 uint8_t TWSMetadata_get_flags(TWSMetadata const* self);
-Direction TWSMetadata_get_slide_dir(TWSMetadata const* self);
-int8_t TWSMetadata_get_step(TWSMetadata const* self);
+Direction TWSMetadata_get_rff_dir(TWSMetadata const* self);
+int8_t TWSMetadata_get_init_step_parity(TWSMetadata const* self);
 uint32_t TWSMetadata_get_prng_seed(TWSMetadata const* self);
 uint32_t TWSMetadata_get_length(TWSMetadata const* self);
 Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self); // caller owns the resulting input list

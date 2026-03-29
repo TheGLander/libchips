@@ -16,6 +16,19 @@
 
 #define res_val(type, val) ((Result_##type){.success = true, .value = (val)})
 
+// A really fun trick to be able to define enums with a dedicated underlying type, back-falling to a direct typedef
+// pre C23
+#if __STDC_VERSION__ >= 202311L
+#define ENUM_DEF(name, underlying) \
+enum name : underlying; \
+typedef enum name name; \
+enum name : underlying
+#else
+#define ENUM_DEF(name, underlying) \
+typedef underlying name; \
+enum
+#endif
+
 #ifdef __has_attribute
 #if __has_attribute(__malloc__)
 #define attr_malloc __attribute__((__malloc__))
@@ -36,6 +49,7 @@
 
 #define lengthof(arr) (sizeof(arr) / sizeof(arr[0])) // Be careful, never pass a pointer, only a full array
 
+#define eprintf(...) fprintf(stderr, __VA_ARGS__)
 void* xmalloc(size_t size) attr_malloc attr_alloc_size((1));
 void* xcalloc(size_t memb_size, size_t memb_n) attr_malloc
     attr_alloc_size((1, 2));
@@ -49,7 +63,5 @@ void fprintfnl(FILE* stream, char const* fmt, ...) attr_printf(2, 3);
 #else
 #define warn(...)
 #endif
-
-#define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
 #endif  // MISC_H

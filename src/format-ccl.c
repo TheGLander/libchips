@@ -95,35 +95,35 @@ uint16_t LevelSet_get_level_idx_by_pass(LevelSet const* self, char const pass[10
 
 static TileID const dat_tileid_map[] = {
     // 0x00
-    Empty, Wall, ICChip, Water, Fire, HiddenWall_Perm, Wall_North, Wall_West,
-    Wall_South, Wall_East, Block_Static, Dirt, Ice, Slide_South,
+    TILE_FLOOR, TILE_WALL, TILE_IC_CHIP, TILE_WATER, TILE_FIRE, TILE_INVISIBLE_WALL, TILE_THIN_WALL_NORTH, TILE_THIN_WALL_WEST,
+    TILE_THIN_WALL_SOUTH, TILE_THIN_WALL_EAST, TILE_BLOCK_STATIC, TILE_DIRT, TILE_ICE, TILE_FORCE_FLOOR_SOUTH,
     // 0x10
-    north(Block), west(Block), south(Block), east(Block), Slide_North,
-    Slide_East, Slide_West, Exit, Door_Blue, Door_Red, Door_Green, Door_Yellow,
-    IceWall_Southeast, IceWall_Southwest, IceWall_Northwest, IceWall_Northeast,
-    BlueWall_Fake, BlueWall_Real,
+    north(CREATURE_BLOCK), west(CREATURE_BLOCK), south(CREATURE_BLOCK), east(CREATURE_BLOCK), TILE_FORCE_FLOOR_NORTH,
+    TILE_FORCE_FLOOR_EAST, TILE_FORCE_FLOOR_WEST, TILE_EXIT, TILE_DOOR_BLUE, TILE_DOOR_RED, TILE_DOOR_GREEN, TILE_DOOR_YELLOW,
+    TILE_ICE_CORNER_SOUTH_EAST, TILE_ICE_CORNER_SOUTH_WEST, TILE_ICE_CORNER_NORTH_WEST, TILE_ICE_CORNER_NORTH_EAST,
+    TILE_BLUE_WALL_REAL, TILE_BLUE_WALL_FAKE,
     // 0x20
-    1, Burglar, Socket, Button_Green, Button_Red, SwitchWall_Closed,
-    SwitchWall_Open, Button_Brown, Button_Blue, Teleport, Bomb, Beartrap,
-    HiddenWall_Temp, Gravel, PopupWall, HintButton,
+    TILE_OVERLAY_BUFFER, TILE_THIEF, TILE_SOCKET, TILE_BUTTON_TOGGLE, TILE_BUTTON_CLONE, TILE_TOGGLE_DOOR_CLOSED,
+    TILE_TOGGLE_DOOR_OPEN, TILE_BUTTON_TRAP, TILE_BUTTON_TANK, TILE_TELEPORT, TILE_BOMB, TILE_TRAP,
+    TILE_HIDDEN_WALL, TILE_GRAVEL, TILE_POPUP_WALL, TILE_HINT,
     // 0x30
-    Wall_Southeast, CloneMachine, Slide_Random, Drowned_Chip, Burned_Chip,
-    Bombed_Chip, 1, 1, 1, Exited_Chip, Exit_Extra_1, Exit_Extra_2,
-    north(Swimming_Chip), west(Swimming_Chip), south(Swimming_Chip),
-    east(Swimming_Chip),
+    TILE_THIN_WALL_SOUTH_EAST, TILE_CLONE_MACHINE, TILE_FORCE_FLOOR_RANDOM, TILE_DROWNED_CHIP, TILE_BURNED_CHIP,
+    TILE_BOMBED_CHIP, TILE_UNUSED_1, TILE_UNUSED_2, TILE_ICE_BLOCK, TILE_EXITED_CHIP, TILE_EXIT_ANIM_1, TILE_EXIT_ANIM_2,
+    north(CREATURE_SWIMMING_CHIP), west(CREATURE_SWIMMING_CHIP), south(CREATURE_SWIMMING_CHIP),
+    east(CREATURE_SWIMMING_CHIP),
     // 0x40
-    north(Bug), west(Bug), south(Bug), east(Bug), north(Fireball),
-    west(Fireball), south(Fireball), east(Fireball), north(Ball), west(Ball),
-    south(Ball), east(Ball), north(Tank), west(Tank), south(Tank), east(Tank),
+    north(CREATURE_BUG), west(CREATURE_BUG), south(CREATURE_BUG), east(CREATURE_BUG), north(CREATURE_FIREBALL),
+    west(CREATURE_FIREBALL), south(CREATURE_FIREBALL), east(CREATURE_FIREBALL), north(CREATURE_BALL), west(CREATURE_BALL),
+    south(CREATURE_BALL), east(CREATURE_BALL), north(CREATURE_TANK), west(CREATURE_TANK), south(CREATURE_TANK), east(CREATURE_TANK),
     // 0x50
-    north(Glider), west(Glider), south(Glider), east(Glider), north(Teeth),
-    west(Teeth), south(Teeth), east(Teeth), north(Walker), west(Walker),
-    south(Walker), east(Walker), north(Blob), west(Blob), south(Blob),
-    east(Blob),
+    north(CREATURE_GLIDER), west(CREATURE_GLIDER), south(CREATURE_GLIDER), east(CREATURE_GLIDER), north(CREATURE_TEETH),
+    west(CREATURE_TEETH), south(CREATURE_TEETH), east(CREATURE_TEETH), north(CREATURE_WALKER), west(CREATURE_WALKER),
+    south(CREATURE_WALKER), east(CREATURE_WALKER), north(CREATURE_BLOB), west(CREATURE_BLOB), south(CREATURE_BLOB),
+    east(CREATURE_BLOB),
     // 0x60
-    north(Paramecium), west(Paramecium), south(Paramecium), east(Paramecium),
-    Key_Blue, Key_Red, Key_Green, Key_Yellow, Boots_Water, Boots_Fire,
-    Boots_Ice, Boots_Slide, north(Chip), west(Chip), south(Chip), east(Chip)
+    north(CREATURE_PARAMECIUM), west(CREATURE_PARAMECIUM), south(CREATURE_PARAMECIUM), east(CREATURE_PARAMECIUM),
+    TILE_KEY_BLUE, TILE_KEY_RED, TILE_KEY_GREEN, TILE_KEY_YELLOW, TILE_BOOTS_WATER, TILE_BOOTS_FIRE,
+    TILE_BOOTS_ICE, TILE_BOOTS_FORCE_FLOOR, north(CREATURE_CHIP), west(CREATURE_CHIP), south(CREATURE_CHIP), east(CREATURE_CHIP)
 };
 
 enum CllChunkTypes {

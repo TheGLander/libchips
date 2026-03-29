@@ -410,6 +410,10 @@ namespace {
     1,
   };
 
+  TEST(FormatTws, Defs) {
+    ASSERT_EQ(static_cast<GameInput>(DIRECTION_NIL), 0);
+    ASSERT_EQ(INPUT_NIL, 0);
+  }
 
   TEST(FormatTws, EmptyFile) {
     uint8_t data[0];
@@ -427,7 +431,7 @@ namespace {
     Result_TWSSetPtr tws_res = parse_tws(example_tws, sizeof(example_tws));
     ASSERT_TRUE(tws_res.success);
     TWSSet* set = tws_res.value;
-    EXPECT_EQ(TWSSet_get_ruleset(set), Ruleset_MS);
+    EXPECT_EQ(TWSSet_get_ruleset(set), RULESET_MS);
     EXPECT_EQ(TWSSet_get_solutions_n(set), 2);
     EXPECT_EQ(set->solutions_allocated, 2);
 
@@ -437,8 +441,8 @@ namespace {
     EXPECT_EQ(TWSMetadata_get_prng_seed(solution), 342566057);
     EXPECT_EQ(TWSMetadata_get_length(solution), 398);
     EXPECT_EQ(TWSMetadata_get_flags(solution), 0);
-    EXPECT_EQ(TWSMetadata_get_step(solution), 0);
-    EXPECT_EQ(TWSMetadata_get_slide_dir(solution), DIRECTION_NORTH);
+    EXPECT_EQ(TWSMetadata_get_init_step_parity(solution), 0);
+    EXPECT_EQ(TWSMetadata_get_rff_dir(solution), DIRECTION_NORTH);
 
     TWSMetadata* solution2 = TWSSet_get_solution_by_level_num(set, 2);
     EXPECT_EQ(solution2, &set->solutions[1]);
@@ -467,7 +471,7 @@ namespace {
     Result_TWSSetPtr tws_res = parse_tws(public_CHIPS_tws, sizeof(public_CHIPS_tws));
     EXPECT_TRUE(tws_res.success);
     TWSSet* set = tws_res.value;
-    EXPECT_EQ(TWSSet_get_ruleset(set), Ruleset_MS);
+    EXPECT_EQ(TWSSet_get_ruleset(set), RULESET_MS);
     EXPECT_EQ(TWSSet_get_solutions_n(set), 149);
     EXPECT_EQ(set->solutions_allocated, 149);
 

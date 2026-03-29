@@ -18,11 +18,11 @@ uint8_t TWSMetadata_get_flags(TWSMetadata const* self) {
   return self->other_flags;
 }
 
-Direction TWSMetadata_get_slide_dir(TWSMetadata const* self) {
+Direction TWSMetadata_get_rff_dir(TWSMetadata const* self) {
   return self->rff_dir;
 }
 
-int8_t TWSMetadata_get_step(TWSMetadata const* self) {
+int8_t TWSMetadata_get_init_step_parity(TWSMetadata const* self) {
   return self->init_step_parity;
 }
 
@@ -34,16 +34,14 @@ uint32_t TWSMetadata_get_length(TWSMetadata const* self) {
   return self->num_ticks;
 }
 
-static GameInput const input_lookup[] = {DIRECTION_NORTH, DIRECTION_WEST, DIRECTION_SOUTH, DIRECTION_EAST,
-    DIRECTION_NORTH | DIRECTION_WEST, DIRECTION_SOUTH | DIRECTION_WEST, DIRECTION_NORTH | DIRECTION_EAST,
-    DIRECTION_SOUTH | DIRECTION_EAST};
+static GameInput const input_lookup[] = {INPUT_NORTH, INPUT_WEST, INPUT_SOUTH, INPUT_EAST,
+    INPUT_NORTH_WEST, INPUT_SOUTH_WEST, INPUT_NORTH_EAST, INPUT_SOUTH_EAST};
 
 Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
   if (self->compressed_inputs.bytes == NULL) {
     return res_err(GameInputList, "Solution has no inputs");
   }
 
-  static_assert(((GameInput) DIRECTION_NIL) == 0);
   GameInputList input_list = GameInputList_new(self->num_ticks);
   uint32_t tick = 0;
   size_t size = self->compressed_inputs.count;
@@ -60,19 +58,19 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
       GameInput input2 = input_lookup[(first_byte >> 4) & 0b11];
       GameInput input3 = input_lookup[(first_byte >> 6) & 0b11];
 
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
       GameInputList_append(&input_list, input);
       tick += 4;
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
       GameInputList_append(&input_list, input2);
       tick += 4;
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
-      GameInputList_append(&input_list, DIRECTION_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
+      GameInputList_append(&input_list, INPUT_NIL);
       GameInputList_append(&input_list, input3);
       tick += 4;
     } else {
@@ -107,7 +105,7 @@ Result_GameInputList TWSMetadata_prepare_inputs(TWSMetadata const* self) {
         }
       }
       for (uint32_t i = 0; i < time; i += 1) {
-        GameInputList_append(&input_list, DIRECTION_NIL);
+        GameInputList_append(&input_list, INPUT_NIL);
       }
       GameInputList_append(&input_list, input);
       tick += time + 1;
@@ -246,7 +244,7 @@ Result_TWSSetPtr parse_tws(uint8_t const* data, size_t data_len) {
   assert_data_avail(1);
   set->ruleset = *data;
   data += 1;
-  if (set->ruleset != Ruleset_Lynx && set->ruleset != Ruleset_MS)
+  if (set->ruleset != RULESET_LYNX && set->ruleset != RULESET_MS)
     return get_error(set, "Invalid TWS ruleset.");
 
   assert_data_avail(2);
@@ -391,7 +389,7 @@ void GameInputList_append(GameInputList* self, GameInput input) {
 
 GameInput GameInputList_get_input(GameInputList const* self, size_t tick) {
   if (tick >= self->count) {
-    return DIRECTION_NIL;
+    return INPUT_NIL;
   }
   return self->inputs[tick];
 }
