@@ -217,7 +217,7 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
           bool is_open = read_uint16_le(&data[trap_idx * 10 + 8]) == 0;
           conn->from = from_x + from_y * MAP_WIDTH;
           conn->to = to_x + to_y * MAP_WIDTH;
-          conn->init_state = is_open;
+          conn->ccl_state = is_open;
         }
       } else if (chunk_type == CCL_CHUNK_CLONERS) {
         uint8_t cloners_n = chunk_len / 8;
@@ -231,7 +231,7 @@ Result_LevelSetPtr parse_ccl(uint8_t const* data, size_t data_len) {
           uint16_t to_y = read_uint16_le(&data[cloner_idx * 8 + 6]);
           conn->from = from_x + from_y * MAP_WIDTH;
           conn->to = to_x + to_y * MAP_WIDTH;
-          conn->init_state = false;
+          conn->ccl_state = false;
         }
       } else if (chunk_type == CCL_CHUNK_PASSWORD) {
         strncpy(meta->password, (char const*)data,
