@@ -4,7 +4,7 @@
 #include "logic.h"
 #include "misc.h"
 
-bool TileID_is_slide(TileID id) {
+bool TileID_is_force_floor(TileID id) {
   return id >= TILE_FORCE_FLOOR_NORTH && id <= TILE_FORCE_FLOOR_RANDOM;
 }
 bool TileID_is_ice(TileID id) {
@@ -26,13 +26,13 @@ bool TileID_is_terrain(TileID id) {
   return id <= TILE_FINAL;
 }
 bool TileID_is_actor(TileID id) {
-  return id >= CREATURE_CHIP && id < ANIM_WATER;
+  return id >= ACTOR_CHIP && id < ANIM_WATER;
 }
 bool TileID_is_animation(TileID id) {
   return id >= ANIM_WATER && id <= ANIM_UNUSED;
 }
 bool TileID_is_block(TileID id) {
-  return id == TILE_BLOCK_STATIC || (TileID_is_actor(id) && TileID_actor_get_id(id) == CREATURE_BLOCK);
+  return id == TILE_BLOCK_STATIC || (TileID_is_actor(id) && TileID_actor_get_id(id) == ACTOR_BLOCK);
 }
 uint8_t Direction_to_idx(Direction dir) {
   return (0x30210 >> ((dir) * 2)) & 3;
