@@ -130,10 +130,10 @@ static bool lynx_init_level(Level* self) {
     MapCell* cell = &self->map[pos];
     // Convert MS tiles into Lynx-comptabile subtitutes
     if (cell->top.id == TILE_BLOCK_STATIC) {
-      cell->top.id = TileID_actor_with_dir(CREATURE_BLOCK, DIRECTION_NORTH);
+      cell->top.id = TileID_actor_with_dir(ACTOR_BLOCK, DIRECTION_NORTH);
     }
     if (cell->bottom.id == TILE_BLOCK_STATIC) {
-      cell->bottom.id = TileID_actor_with_dir(CREATURE_BLOCK, DIRECTION_NORTH);
+      cell->bottom.id = TileID_actor_with_dir(ACTOR_BLOCK, DIRECTION_NORTH);
     }
     if (TileID_is_ms_special(cell->top.id)) {
       cell->top.id = TILE_WALL;
@@ -161,11 +161,11 @@ static bool lynx_init_level(Level* self) {
       actor->pos = pos;
       actor->id = TileID_actor_get_id(cell->top.id);
       actor->direction = TileID_actor_get_dir(cell->top.id);
-      if (self->lx_state.pedantic_mode && actor->id == CREATURE_BLOCK &&
+      if (self->lx_state.pedantic_mode && actor->id == ACTOR_BLOCK &&
           TileID_is_ice(cell->bottom.id)) {
         actor->direction = DIRECTION_NIL;
       }
-      if (actor->id == CREATURE_CHIP) {
+      if (actor->id == ACTOR_CHIP) {
         if (chip) {
           // warn("level %d: multiple Chips on the map!", num);
           self->status_flags |= SF_INVALID;
@@ -223,7 +223,7 @@ static bool lynx_init_level(Level* self) {
 }
 
 static void Actor_remove(Actor* self, Level* level, TileID animation_type) {
-  if (self->id != CREATURE_CHIP) {
+  if (self->id != ACTOR_CHIP) {
     Level_cell_remove_claim(level, self->pos);
   }
   if (self->state & CS_PUSHED) {
@@ -342,14 +342,14 @@ static Direction Actor_calculate_forced_move(Actor* self, Level* level, bool adv
     return DIRECTION_NIL;
   TileID terrain = Level_get_terrain(level, self->pos);
   if (TileID_is_ice(terrain)) {
-    if (self->id == CREATURE_CHIP &&
+    if (self->id == ACTOR_CHIP &&
         (Level_player_has_item(level, TILE_BOOTS_ICE) || level->lx_state.chip_stuck))
       return DIRECTION_NIL;
     if (self->direction == DIRECTION_NIL)
       return DIRECTION_NIL;
     return self->direction;
-  } else if (TileID_is_slide(terrain)) {
-    if (self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR))
+  } else if (TileID_is_force_floor(terrain)) {
+    if (self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR))
       return DIRECTION_NIL;
     // FF overrides are now handled separately
     return Slide_get_forced_direction(terrain, level, advance_rff);
@@ -408,7 +408,7 @@ static bool TileID_impedes_actor(TileID self,
     case TILE_ICE_BLOCK:
       return true;
     case TILE_GRAVEL:
-      return actor->id != CREATURE_CHIP && actor->id != CREATURE_BLOCK;
+      return actor->id != ACTOR_CHIP && actor->id != ACTOR_BLOCK;
     case TILE_DIRT:
     case TILE_THIEF:
     case TILE_HINT:
@@ -424,16 +424,16 @@ static bool TileID_impedes_actor(TileID self,
     case TILE_BOOTS_ICE:
     case TILE_BOOTS_WATER:
     case TILE_BOOTS_FIRE:
-      return actor->id != CREATURE_CHIP;
+      return actor->id != ACTOR_CHIP;
     case TILE_SOCKET:
-      return actor->id != CREATURE_CHIP || level->chips_left > 0;
+      return actor->id != ACTOR_CHIP || level->chips_left > 0;
     case TILE_DOOR_RED:
     case TILE_DOOR_BLUE:
     case TILE_DOOR_GREEN:
     case TILE_DOOR_YELLOW:
-      return actor->id != CREATURE_CHIP || !Level_player_has_item(level, self);
+      return actor->id != ACTOR_CHIP || !Level_player_has_item(level, self);
     case TILE_FIRE:
-      return actor->id != CREATURE_CHIP && actor->id != CREATURE_BLOCK && actor->id != CREATURE_FIREBALL;
+      return actor->id != ACTOR_CHIP && actor->id != ACTOR_BLOCK && actor->id != ACTOR_FIREBALL;
     case TILE_ICE_CORNER_NORTH_WEST:
     case TILE_THIN_WALL_SOUTH_EAST:
       return dir & (DIRECTION_NORTH | DIRECTION_WEST);
@@ -499,8 +499,8 @@ static bool Actor_check_collision(Actor const* self,
       !(flags & CMM_RELEASING))
     return false;
   // Can't go backwards on force floors
-  if (TileID_is_slide(this_terrain) &&
-      !(self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR)) &&
+  if (TileID_is_force_floor(this_terrain) &&
+      !(self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR)) &&
       Slide_get_forced_direction(this_terrain, level, false) ==
           Direction_back(dir))
     return false;
@@ -529,7 +529,7 @@ static bool Actor_check_collision(Actor const* self,
     return false;
   // Check actor
   if (Level_cell_has_animation(level, target_pos)) {
-    if (self->id == CREATURE_CHIP)
+    if (self->id == ACTOR_CHIP)
       return false;
     if (flags & CMM_CLEARANIMATIONS) {
       Actor* anim = Level_find_actor(level, target_pos, FA_ANIMS);
@@ -537,17 +537,17 @@ static bool Actor_check_collision(Actor const* self,
     }
   }
   if (Level_cell_has_claim(level, target_pos)) {
-    if (self->id != CREATURE_CHIP)
+    if (self->id != ACTOR_CHIP)
       return false;
     Actor* other = Level_find_actor(level, target_pos, FA_NO_CHIP);
-    if (other && other->id == CREATURE_BLOCK) {
+    if (other && other->id == ACTOR_BLOCK) {
       if (!Actor_can_be_pushed(other, level, dir, flags & ~CMM_RELEASING))
         return false;
     }
   }
   // These tiles turn into real walls, but these checks have to happen after the
   // `TileID` and push checks we want blocks to be able to be pushed off these tiles
-  if (self->id == CREATURE_CHIP && (new_terrain == TILE_HIDDEN_WALL || new_terrain == TILE_BLUE_WALL_FAKE)) {
+  if (self->id == ACTOR_CHIP && (new_terrain == TILE_HIDDEN_WALL || new_terrain == TILE_BLUE_WALL_FAKE)) {
     if (flags & CMM_STARTMOVEMENT) {
       level->map[target_pos].top.id = TILE_WALL;
     }
@@ -571,8 +571,8 @@ static TriRes Actor_start_moving_to(Actor* self, Level* level, bool releasing) {
 
   TileID from_terrain = Level_get_terrain(level, self->pos);
 
-  if (self->id == CREATURE_CHIP && !Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR)) {
-    if (TileID_is_slide(from_terrain) && self->move_decision == DIRECTION_NIL) {
+  if (self->id == ACTOR_CHIP && !Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR)) {
+    if (TileID_is_force_floor(from_terrain) && self->move_decision == DIRECTION_NIL) {
       self->state |= CS_SLIDETOKEN;
     } else if (!TileID_is_ice(from_terrain) ||
                Level_player_has_item(level, TILE_BOOTS_ICE)) {
@@ -584,7 +584,7 @@ static TriRes Actor_start_moving_to(Actor* self, Level* level, bool releasing) {
                                  CMM_STARTMOVEMENT |
                                  (releasing ? CMM_RELEASING : 0))) {
     // Show player bonks and play the SFX if we haven't bonk already
-    if (self->id == CREATURE_CHIP) {
+    if (self->id == ACTOR_CHIP) {
       if (!level->lx_state.chip_bonked) {
         level->lx_state.chip_bonked = true;
         Level_add_sfx(level, SND_CANT_MOVE);
@@ -593,34 +593,34 @@ static TriRes Actor_start_moving_to(Actor* self, Level* level, bool releasing) {
     }
     // If we bonked while on ice, turn around
     if (TileID_is_ice(from_terrain) &&
-        !(self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_ICE))) {
+        !(self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_ICE))) {
       self->direction =
           get_ice_wall_turn_dir(from_terrain, Direction_back(self->direction));
     }
     return TRIRES_NOTHING;
   }
 
-  if (level->lx_state.map_breached && (Level_get_chip(level)->id == CREATURE_CHIP)) {
+  if (level->lx_state.map_breached && (Level_get_chip(level)->id == ACTOR_CHIP)) {
     Level_remove_chip(level, CHIP_COLLIDED, self);
     return TRIRES_DIED;
   }
   assert(releasing ||
          !(from_terrain == TILE_CLONE_MACHINE || from_terrain == TILE_TRAP));
 
-  if (self->id != CREATURE_CHIP) {
+  if (self->id != ACTOR_CHIP) {
     // Remove the claim on the location we're about to leav
     Level_cell_remove_claim(level, self->pos);
     // NOTE: If it looks like Chip will *try* to move into out cell (and we're
     // about to leave), mark ourselves as the actor Chip is colliding with,
     // which we will use when Chip will eventually try to move, see a few lines
     // down
-    if (self->id != CREATURE_BLOCK && self->pos == level->lx_state.chip_predicted_pos) {
+    if (self->id != ACTOR_BLOCK && self->pos == level->lx_state.chip_predicted_pos) {
       level->lx_state.chip_colliding_actor = self;
     }
   }
   // NOTE: When there's apparently a monster that just left the cell we're
   // trying to enter, kill outselves as if we collided into them
-  if (self->id == CREATURE_CHIP && level->lx_state.chip_colliding_actor &&
+  if (self->id == ACTOR_CHIP && level->lx_state.chip_colliding_actor &&
       !level->lx_state.chip_colliding_actor->hidden) {
     // ???
     level->lx_state.chip_colliding_actor->move_cooldown = 8;
@@ -633,7 +633,7 @@ static TriRes Actor_start_moving_to(Actor* self, Level* level, bool releasing) {
   // Why `+=` instead of `=`? Can cooldown be negative?
   self->move_cooldown += 8;
 
-  if (self->id != CREATURE_CHIP) {
+  if (self->id != ACTOR_CHIP) {
     // Add the claim for the new location we're in
     Level_cell_add_claim(level, self->pos);
     // If we're now at Chip's cell, kill 'em
@@ -745,7 +745,7 @@ static bool Level_activate_cloner(Level* self, Position pos) {
 static void Level_turn_tanks(Level* self) {
   for (uint32_t i = 1; i < self->actors_n; i++) {
     Actor* actor = &self->actors[i];
-    if (actor->hidden || actor->id != CREATURE_TANK)
+    if (actor->hidden || actor->id != ACTOR_TANK)
       continue;
     TileID terrain = Level_get_terrain(self, actor->pos);
     if (terrain == TILE_CLONE_MACHINE || TileID_is_ice(terrain))
@@ -762,10 +762,10 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
 
   TileID terrain = Level_get_terrain(level, self->pos);
 
-  if (self->id == CREATURE_CHIP && level->lx_state.to_place_wall_pos != POSITION_NULL)
+  if (self->id == ACTOR_CHIP && level->lx_state.to_place_wall_pos != POSITION_NULL)
     return true;
 
-  if (self->id == CREATURE_CHIP) {
+  if (self->id == ACTOR_CHIP) {
     if (level->lx_state.to_place_wall_pos != POSITION_NULL)
       return true;
     if (!Level_player_has_item(level, TILE_BOOTS_ICE)) {
@@ -779,16 +779,16 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
 
   switch (terrain) {
     case TILE_WATER:
-      if (self->id == CREATURE_GLIDER ||
-          (self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_WATER))) {
+      if (self->id == ACTOR_GLIDER ||
+          (self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_WATER))) {
         // We survive, yay!
         break;
       } else {
         // Drown
-        if (self->id == CREATURE_BLOCK) {
+        if (self->id == ACTOR_BLOCK) {
           Level_set_terrain(level, self->pos, TILE_DIRT);
         }
-        if (self->id == CREATURE_CHIP) {
+        if (self->id == ACTOR_CHIP) {
           Level_remove_chip(level, CHIP_DROWNED, NULL);
         } else {
           Actor_remove(self, level, ANIM_WATER);
@@ -798,7 +798,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
     case TILE_FIRE:
       if (pedantic_idle)
         break;
-      if (self->id == CREATURE_CHIP && !Level_player_has_item(level, TILE_BOOTS_FIRE)) {
+      if (self->id == ACTOR_CHIP && !Level_player_has_item(level, TILE_BOOTS_FIRE)) {
         Level_remove_chip(level, CHIP_BURNED, NULL);
         return TRIRES_DIED;
       }
@@ -806,13 +806,13 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
     case TILE_DIRT:
     case TILE_BLUE_WALL_REAL:
       Level_set_terrain(level, self->pos, TILE_FLOOR);
-      if (self->id == CREATURE_CHIP) {
+      if (self->id == ACTOR_CHIP) {
         // Only play the SFX if we're Chip
         Level_add_sfx(level, SND_TILE_EMPTIED);
       }
       break;
     case TILE_POPUP_WALL:
-      if (self->id == CREATURE_CHIP) {
+      if (self->id == ACTOR_CHIP) {
         Level_set_terrain(level, self->pos, TILE_WALL);
         Level_add_sfx(level, SND_WALL_CREATED);
       }
@@ -822,7 +822,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
     case TILE_DOOR_BLUE:
     case TILE_DOOR_YELLOW: {
       Level_set_terrain(level, self->pos, TILE_FLOOR);
-      if (self->id == CREATURE_CHIP) {
+      if (self->id == ACTOR_CHIP) {
         uint8_t* item_ptr = Level_player_item_ptr(level, terrain);
         if (terrain != TILE_DOOR_GREEN && *item_ptr > 0) {
           *item_ptr -= 1;
@@ -837,7 +837,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
     case TILE_KEY_RED:
     case TILE_KEY_GREEN:
     case TILE_KEY_YELLOW: {
-      if (self->id != CREATURE_CHIP)
+      if (self->id != ACTOR_CHIP)
         break;
       Level_add_sfx(level, SND_ITEM_COLLECTED);
       Level_set_terrain(level, self->pos, TILE_FLOOR);
@@ -853,7 +853,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
     case TILE_BOOTS_FORCE_FLOOR:
     case TILE_BOOTS_FIRE:
     case TILE_BOOTS_WATER: {
-      if (self->id != CREATURE_CHIP)
+      if (self->id != ACTOR_CHIP)
         break;
       Level_set_terrain(level, self->pos, TILE_FLOOR);
       uint8_t* item_ptr = Level_player_item_ptr(level, terrain);
@@ -862,7 +862,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
       break;
     }
     case TILE_THIEF:
-      if (self->id != CREATURE_CHIP)
+      if (self->id != ACTOR_CHIP)
         break;
       *Level_player_item_ptr(level, TILE_BOOTS_ICE) = 0;
       *Level_player_item_ptr(level, TILE_BOOTS_FORCE_FLOOR) = 0;
@@ -871,7 +871,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
       Level_add_sfx(level, SND_BOOTS_STOLEN);
       break;
     case TILE_IC_CHIP:
-      if (pedantic_idle || self->id != CREATURE_CHIP)
+      if (pedantic_idle || self->id != ACTOR_CHIP)
         break;
       Level_set_terrain(level, self->pos, TILE_FLOOR);
       if (level->chips_left > 0) {
@@ -881,7 +881,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
       break;
     case TILE_SOCKET:
       Level_set_terrain(level, self->pos, TILE_FLOOR);
-      if (self->id == CREATURE_CHIP) {
+      if (self->id == ACTOR_CHIP) {
         Level_add_sfx(level, SND_SOCKET_OPENED);
       }
       break;
@@ -889,7 +889,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
       if (pedantic_idle)
         break;
       Level_set_terrain(level, self->pos, TILE_FLOOR);
-      if (self->id == CREATURE_CHIP) {
+      if (self->id == ACTOR_CHIP) {
         Level_remove_chip(level, CHIP_BOMBED, NULL);
       } else {
         Level_add_sfx(level, SND_BOMB_EXPLODES);
@@ -931,7 +931,7 @@ static TriRes Actor_enter_tile(Actor* self, Level* level, bool pedantic_idle) {
       }
     break;
     case TILE_EXIT:
-      if (self->id != CREATURE_CHIP)
+      if (self->id != ACTOR_CHIP)
         break;
       self->hidden = true;
       level->level_complete = true;
@@ -951,20 +951,20 @@ static bool Actor_reduce_cooldown(Actor* self, Level const* level) {
     return true;
   assert(self->move_cooldown > 0);
 
-  if (self->id == CREATURE_CHIP && level->lx_state.chip_stuck)
+  if (self->id == ACTOR_CHIP && level->lx_state.chip_stuck)
     return true;
 
   uint8_t speed = 2;
-  if (self->id == CREATURE_BLOB) {
+  if (self->id == ACTOR_BLOB) {
     speed /= 2;
   }
   TileID terrain = Level_get_terrain(level, self->pos);
-  if (TileID_is_slide(terrain) &&
-      !(self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR))) {
+  if (TileID_is_force_floor(terrain) &&
+      !(self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_FORCE_FLOOR))) {
     speed *= 2;
   }
   if (TileID_is_ice(terrain) &&
-      !(self->id == CREATURE_CHIP && Level_player_has_item(level, TILE_BOOTS_ICE))) {
+      !(self->id == ACTOR_CHIP && Level_player_has_item(level, TILE_BOOTS_ICE))) {
     speed *= 2;
   }
   self->move_cooldown -= speed;
@@ -1021,7 +1021,7 @@ static bool Actor_can_be_pushed(Actor* self,
                                 Level* level,
                                 Direction dir,
                                 uint8_t flags) {
-  assert(self && self->id == CREATURE_BLOCK);
+  assert(self && self->id == ACTOR_BLOCK);
   assert(Level_get_terrain(level, self->pos) != TILE_CLONE_MACHINE);
   assert(dir != DIRECTION_NIL);
   if (!Actor_check_collision(self, level, dir, flags)) {
@@ -1052,38 +1052,38 @@ static void Actor_get_checked_decision_dirs(Actor* self,
                                             Level* level,
                                             Direction choices[4]) {
   switch (self->id) {
-    case CREATURE_TANK:
+    case ACTOR_TANK:
       choices[0] = self->direction;
       break;
-    case CREATURE_BALL:
+    case ACTOR_BALL:
       choices[0] = self->direction;
       choices[1] = Direction_back(self->direction);
       break;
-    case CREATURE_GLIDER:
+    case ACTOR_GLIDER:
       choices[0] = self->direction;
       choices[1] = Direction_left(self->direction);
       choices[2] = Direction_right(self->direction);
       choices[3] = Direction_back(self->direction);
       break;
-    case CREATURE_FIREBALL:
+    case ACTOR_FIREBALL:
       choices[0] = self->direction;
       choices[1] = Direction_right(self->direction);
       choices[2] = Direction_left(self->direction);
       choices[3] = Direction_back(self->direction);
       break;
-    case CREATURE_BUG:
+    case ACTOR_BUG:
       choices[0] = Direction_left(self->direction);
       choices[1] = self->direction;
       choices[2] = Direction_right(self->direction);
       choices[3] = Direction_back(self->direction);
       break;
-    case CREATURE_PARAMECIUM:
+    case ACTOR_PARAMECIUM:
       choices[0] = Direction_right(self->direction);
       choices[1] = self->direction;
       choices[2] = Direction_left(self->direction);
       choices[3] = Direction_back(self->direction);
       break;
-    case CREATURE_WALKER:
+    case ACTOR_WALKER:
       if (Actor_check_collision(self, level, self->direction,
                                 CMM_CLEARANIMATIONS)) {
         self->move_decision = self->direction;
@@ -1098,10 +1098,10 @@ static void Actor_get_checked_decision_dirs(Actor* self,
 
       choices[0] = checked_dir;
       break;
-    case CREATURE_BLOB:
+    case ACTOR_BLOB:
       choices[0] = clockwise_directions[Prng_random4(&level->prng)];
       break;
-    case CREATURE_TEETH:
+    case ACTOR_TEETH:
       if ((level->current_tick + level->init_step_parity) & 4)
         return;
       Position chip_pos = Level_get_chip(level)->pos;
@@ -1148,7 +1148,7 @@ static void Chip_do_decision(Actor* self, Level* level) {
 
   // Can we override the current forced move?
   TileID terrain = Level_get_terrain(level, self->pos);
-  bool can_override = TileID_is_slide(terrain) && (self->state & CS_SLIDETOKEN);
+  bool can_override = TileID_is_force_floor(terrain) && (self->state & CS_SLIDETOKEN);
   Direction forced_move = Actor_get_forced_move(self);
   if (forced_move != DIRECTION_NIL && !can_override)
     can_move = false;
@@ -1210,7 +1210,7 @@ static void Actor_do_decision(Actor* self, Level* level) {
     Chip_do_decision(self, level);
     return;
   }
-  if (self->id == CREATURE_BLOCK)
+  if (self->id == ACTOR_BLOCK)
     return;
   self->move_decision = DIRECTION_NIL;
   if (forced_move)
@@ -1265,7 +1265,7 @@ static bool Actor_teleport(Actor* self, Level* level) {
       // on the cell is ***removed, without the actor itself being removed***
       // due to the teleportee's position still being set to the position of the
       // occupier,
-      if (self->id != CREATURE_CHIP) {
+      if (self->id != ACTOR_CHIP) {
         Level_cell_remove_claim(level, self->pos);
       }
       self->pos = checked_pos;
@@ -1273,7 +1273,7 @@ static bool Actor_teleport(Actor* self, Level* level) {
           Actor_check_collision(self, level, self->direction, 0))
         break;
       if (checked_pos == start_pos) {
-        if (self->id == CREATURE_CHIP) {
+        if (self->id == ACTOR_CHIP) {
           level->lx_state.chip_stuck = true;
         } else {
           Level_cell_add_claim(level, self->pos);
@@ -1289,7 +1289,7 @@ static bool Actor_teleport(Actor* self, Level* level) {
       }
     }
   }
-  if (self->id == CREATURE_CHIP) {
+  if (self->id == ACTOR_CHIP) {
     Level_add_sfx(level, SND_TELEPORTING);
   } else {
     Level_cell_add_claim(level, self->pos);
@@ -1300,8 +1300,8 @@ static bool Actor_teleport(Actor* self, Level* level) {
 
 static void lynx_tick_level(Level* self) {
   Actor* chip = Level_get_chip(self);
-  if (chip->id == CREATURE_PUSHING_CHIP) {
-    chip->id = CREATURE_CHIP;
+  if (chip->id == ACTOR_PUSHING_CHIP) {
+    chip->id = ACTOR_CHIP;
   }
   if (!Level_in_endgame(self)) {
     if (self->level_complete) {
@@ -1405,8 +1405,8 @@ static void lynx_tick_level(Level* self) {
     } else {
       self->status_flags &= ~SF_SHOW_HINT;
     }
-    if (chip->id == CREATURE_CHIP && self->lx_state.chip_pushing) {
-      chip->id = CREATURE_PUSHING_CHIP;
+    if (chip->id == ACTOR_CHIP && self->lx_state.chip_pushing) {
+      chip->id = ACTOR_PUSHING_CHIP;
     }
     if (chip->move_cooldown) {
       Level_stop_terrain_sfx(self);
@@ -1421,7 +1421,7 @@ static void lynx_tick_level(Level* self) {
           Level_add_sfx(self, SND_SKATING_FORWARD);
         else
           Level_add_sfx(self, SND_SKATING_TURN);
-      } else if (TileID_is_slide(terrain)) {
+      } else if (TileID_is_force_floor(terrain)) {
         if (Level_player_has_item(self, TILE_BOOTS_FORCE_FLOOR))
           Level_add_sfx(self, SND_SLIDEWALKING);
         else
@@ -1511,10 +1511,10 @@ static bool lynx_chip_can_move(Level* self) {
   if (chip->move_cooldown) {
     return false;
   }
-  if (chip->id != CREATURE_CHIP) {
+  if (chip->id != ACTOR_CHIP) {
     return false;
   }
-  if (TileID_is_slide(Level_get_terrain(self, chip->pos)) && (chip->state & CS_SLIDETOKEN)) {
+  if (TileID_is_force_floor(Level_get_terrain(self, chip->pos)) && (chip->state & CS_SLIDETOKEN)) {
     return true;
   }
   if (Actor_calculate_forced_move(chip, self, false) != DIRECTION_NIL) {
