@@ -612,7 +612,7 @@ static void Level_turn_tanks(Level* self, Actor const* invoking_actor) {
     if (actor == invoking_actor)
       continue;
     if (TileID_actor_get_id(Level_cell_get_top_floor(self, actor->pos)) ==
-        ACTOR_TANK) {
+        ACTOR_TANK && Level_cell_get_bottom_floor(self, actor->pos) != TILE_CLONE_MACHINE) {
       Actor_update_floor(actor, self);
     } else if ((actor->state & CS_SPONTANEOUS)) {
       /* handle Spontaneous Generation */

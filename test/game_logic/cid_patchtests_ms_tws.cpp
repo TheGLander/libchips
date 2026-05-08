@@ -35,7 +35,7 @@ protected:
     ASSERT_TRUE(res_level.success);
     level = res_level.value;
 
-    solution = TWSSet_get_solution_by_level_num(tws_set, num);
+    solution = TWSSet_get_solution_by_password(tws_set, level->metadata->password);
     Result_GameInputList res3 = TWSMetadata_prepare_inputs(solution);
     ASSERT_TRUE(res3.success);
     input_list = res3.value;
@@ -376,12 +376,52 @@ namespace {
   }
 
   TEST_F(CIDPatchTestsTWS, Level23) {
-    LoadLevelTws(23);
-    test_level(level, solution, &input_list);
+    Result_LevelPtr res_level = LevelMetadata_make_level(LevelSet_get_level(level_set, 23 - 1), &ms_logic);
+    ASSERT_TRUE(res_level.success);
+    level = res_level.value;
+
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BOMB);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TILE_BUTTON_CLONE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_BUTTON_CLONE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 2)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 2)), TILE_CLONE_MACHINE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TILE_BOMB);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(3, 2)), TILE_BUTTON_TANK);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(3, 3)), TileID_actor_with_dir(ACTOR_BLOCK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(3, 3)), TILE_CLONE_MACHINE);
+
+    TickLevel(INPUT_SOUTH);
+    TickLevel(INPUT_NIL);
+    TickLevel(INPUT_NIL);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 1)), TILE_BUTTON_CLONE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 2)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 2)), TILE_CLONE_MACHINE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(3, 2)), TILE_BLOCK_STATIC);
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(3, 2)), TILE_BUTTON_TANK);
+    TickLevel(INPUT_NIL);
+    TickLevel(INPUT_NORTH);
+    TickLevel(INPUT_NIL);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_NORTH));
+    TickLevel(INPUT_SOUTH);
+    TickLevel(INPUT_NIL);
+    TickLevel(INPUT_NIL);
+    TickLevel(INPUT_NIL);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 2)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 2)), TILE_CLONE_MACHINE);
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TILE_FLOOR);
   }
 
   TEST_F(CIDPatchTestsTWS, Level24) {
-    Result_LevelPtr res_level = LevelMetadata_make_level(LevelSet_get_level(level_set, 24 - 1), &ms_logic);
+    LoadLevelTws(24);
+    test_level(level, solution, &input_list);
+  }
+
+  TEST_F(CIDPatchTestsTWS, Level25) {
+    Result_LevelPtr res_level = LevelMetadata_make_level(LevelSet_get_level(level_set, 25 - 1), &ms_logic);
     ASSERT_TRUE(res_level.success);
     level = res_level.value;
 
