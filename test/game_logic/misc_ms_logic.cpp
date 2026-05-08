@@ -42,21 +42,21 @@ protected:
 namespace {
   TEST_F(TrapDatLogicTestMS, TrapOpenChip) {
     LoadLevel("TRPO");
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_EXIT);
     QuadTickLevel(DIRECTION_EAST);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_TRAP);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 0)), TILE_EXIT);
   }
 
   TEST_F(TrapDatLogicTestMS, TrapClosedChip) {
     LoadLevel("TRPC");
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TILE_TRAP);
     QuadTickLevel(DIRECTION_EAST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 0)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_EXIT);
   }
@@ -71,7 +71,7 @@ namespace {
 
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 3)), TILE_BUTTON_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TILE_BUTTON_CLONE);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(CREATURE_BLOCK, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(ACTOR_BLOCK, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 3)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(3, 3)), TILE_ICE);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), TILE_WATER);
@@ -87,7 +87,7 @@ namespace {
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 1)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 1)), TILE_DIRT);
 
@@ -103,11 +103,11 @@ namespace {
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_EAST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TILE_TRAP);
     QuadTickLevel(INPUT_NORTH);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TILE_TRAP);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_NORTH));
 
     LoadLevel("TRPO2");
     QuadTickLevel(INPUT_EAST);
@@ -121,7 +121,7 @@ namespace {
     QuadTickLevel(INPUT_EAST);
     QuadTickLevel(INPUT_NORTH);
     QuadTickLevel(INPUT_NORTH);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_NORTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 4)), TILE_BLOCK_STATIC);
   }
@@ -136,7 +136,7 @@ namespace {
 
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 3)), TILE_BUTTON_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TILE_BUTTON_CLONE);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(CREATURE_BLOCK, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(ACTOR_BLOCK, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 3)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(3, 3)), TILE_ICE);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), TILE_WATER);
@@ -162,7 +162,7 @@ namespace {
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(CREATURE_BLOCK, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 3)), TileID_actor_with_dir(ACTOR_BLOCK, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 3)), TILE_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(4, 3)), TILE_WATER);
     QuadTickLevel(INPUT_WEST);
@@ -179,10 +179,10 @@ namespace {
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_SOUTH);
     QuadTickLevel(INPUT_EAST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TILE_TRAP);
     QuadTickLevel(INPUT_NORTH);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(CREATURE_CHIP, INPUT_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 5)), TileID_actor_with_dir(ACTOR_CHIP, INPUT_NORTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 5)), TILE_TRAP);
 
     LoadLevel("TRPC2");
