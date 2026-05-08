@@ -85,14 +85,14 @@ namespace {
   TEST_F(CIDPatchTestsTWS, Level6) {
     LoadLevelTws(6);
     test_level(level, solution, &input_list);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 2)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 2)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
     Actor const* actors = Level_get_actors_const_ptr(level);
     bool found = false;
     for (size_t i = 0; i < Level_get_actors_n(level); i += 1) {
       int32_t x = Position_get_x(Actor_get_position(&actors[i]));
       int32_t y = Position_get_y(Actor_get_position(&actors[i]));
-      if (actors[i].id == CREATURE_BLOCK && x == 2 && y == 1) {
+      if (actors[i].id == ACTOR_BLOCK && x == 2 && y == 1) {
         found = true; // Explicitly check that convergence occurred
         break;
       }
@@ -103,14 +103,14 @@ namespace {
   TEST_F(CIDPatchTestsTWS, Level7) {
     LoadLevelTws(7);
     test_level(level, solution, &input_list);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 2)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 2)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_SOUTH));
     Actor const* actors = Level_get_actors_const_ptr(level);
     bool found = false;
     for (size_t i = 0; i < Level_get_actors_n(level); i += 1) {
       int16_t x = Position_get_x(Actor_get_position(&actors[i]));
       int16_t y = Position_get_y(Actor_get_position(&actors[i]));
-      if (Actor_get_id(&actors[i]) == CREATURE_BLOCK && x == 2 && y == 1) {
+      if (Actor_get_id(&actors[i]) == ACTOR_BLOCK && x == 2 && y == 1) {
         found = true; // Explicitly check that convergence occurred
         break;
       }
@@ -137,7 +137,7 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
   }
 
   TEST_F(CIDPatchTestsTWS, Level9) {
@@ -151,13 +151,13 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 0)), TILE_CLONE_MACHINE);
     TickLevel(INPUT_EAST);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 0)), TILE_CLONE_MACHINE);
     TickLevel(INPUT_WEST);
     TickLevel(INPUT_NIL);
@@ -167,9 +167,9 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(2, 0)), TILE_CLONE_MACHINE);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
   }
 
   TEST_F(CIDPatchTestsTWS, Level10) {
@@ -181,13 +181,13 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_TANK);
     TickLevel(INPUT_NIL);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_ICE_CORNER_SOUTH_EAST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TILE_FORCE_FLOOR_NORTH);
   }
 
@@ -199,12 +199,12 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(0, 1)), TILE_BUTTON_TANK);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TILE_BUTTON_TANK);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 2)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 2)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
   }
 
   TEST_F(CIDPatchTestsTWS, Level12) {
@@ -215,11 +215,11 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_FORCE_FLOOR_EAST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_TANK);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_BOMB);
     TickLevel(INPUT_NIL);
@@ -247,10 +247,10 @@ namespace {
     TickLevel(INPUT_SOUTH);
     TickLevel(INPUT_NIL);
     EXPECT_EQ(Level_get_win_state(level), TRIRES_NOTHING);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_bottom_terrain(level, Position_from_xy(1, 1)), TILE_BUTTON_TANK);
     TickLevel(INPUT_NIL);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_BUTTON_TANK);
   }
 
@@ -261,12 +261,12 @@ namespace {
     test_level(level, solution, &input_list);
     Actor const* actors = Level_get_actors_const_ptr(level);
     for (size_t i = 0; i < Level_get_actors_n(level); i += 1) {
-      if (Actor_get_id(&actors[i]) == CREATURE_FIREBALL) { // Verify both fireballs either died or were erased
+      if (Actor_get_id(&actors[i]) == ACTOR_FIREBALL) { // Verify both fireballs either died or were erased
         EXPECT_TRUE(Actor_get_hidden(&actors[i])); // The non-existence patch does also kill the thing
-        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(CREATURE_FIREBALL, DIRECTION_NORTH));
-        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(CREATURE_FIREBALL, DIRECTION_WEST));
-        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(CREATURE_FIREBALL, DIRECTION_SOUTH));
-        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(CREATURE_FIREBALL, DIRECTION_EAST));
+        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(ACTOR_FIREBALL, DIRECTION_NORTH));
+        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(ACTOR_FIREBALL, DIRECTION_WEST));
+        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(ACTOR_FIREBALL, DIRECTION_SOUTH));
+        EXPECT_NE(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(ACTOR_FIREBALL, DIRECTION_EAST));
       }
     }
   }
@@ -275,12 +275,12 @@ namespace {
     LoadLevelTws(16);
     test_level(level, solution, &input_list);
 
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(30, 28)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(28, 29)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(30, 28)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(28, 29)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_NORTH));
     Actor const* actors = Level_get_actors_const_ptr(level);
     for (size_t i = 0; i < Level_get_actors_n(level); i += 1) {
-      if (Actor_get_id(&actors[i]) == CREATURE_BLOCK) { // Verify the blocks became mutants
-        EXPECT_EQ(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
+      if (Actor_get_id(&actors[i]) == ACTOR_BLOCK) { // Verify the blocks became mutants
+        EXPECT_EQ(Level_get_top_terrain(level, Actor_get_position(&actors[i])), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_NORTH));
       }
     }
   }
@@ -291,7 +291,7 @@ namespace {
 
     LoadLevelTws(17);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_TRAP);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 2)), TILE_THIN_WALL_WEST);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TILE_HINT);
 
@@ -304,10 +304,10 @@ namespace {
     TickLevel(INPUT_NIL);
     TickLevel(INPUT_NIL);
 
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_FLOOR);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 2)), TILE_THIN_WALL_WEST);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_SOUTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 3)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_SOUTH));
     TickLevel(INPUT_EAST);
     TickLevel(INPUT_NIL);
     EXPECT_EQ(Level_get_win_state(level), TRIRES_DIED);
@@ -316,36 +316,36 @@ namespace {
   TEST_F(CIDPatchTestsTWS, Level18) {
     LoadLevelTws(18);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_FLOOR);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_WEST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_WEST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TILE_THIN_WALL_SOUTH_EAST);
 
     test_level(level, solution, &input_list);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_CHIP, DIRECTION_NORTH));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_CHIP, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
   }
 
   TEST_F(CIDPatchTestsTWS, Level19) {
     LoadLevelTws(19);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_TRAP);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TILE_BUTTON_CLONE);
 
     test_level(level, solution, &input_list);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_FLOOR);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_WEST));
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_WEST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
   }
 
   TEST_F(CIDPatchTestsTWS, Level20) {
     LoadLevelTws(20);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_FORCE_FLOOR_EAST);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TILE_BUTTON_CLONE);
 
     test_level(level, solution, &input_list);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_FLOOR);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_WEST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_WEST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(2, 0)), TILE_BUTTON_CLONE);
   }
 
@@ -353,11 +353,11 @@ namespace {
     LoadLevelTws(21);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_TELEPORT);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_CLONE);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_EAST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_EAST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_TELEPORT);
 
     test_level(level, solution, &input_list);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_WEST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_WEST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_CLONE);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TILE_THIN_WALL_SOUTH);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 1)), TILE_TELEPORT);
@@ -367,10 +367,10 @@ namespace {
     LoadLevelTws(22);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TILE_ICE_CORNER_SOUTH_EAST);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_CLONE);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_NORTH));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_NORTH));
 
     test_level(level, solution, &input_list);
-    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(CREATURE_TANK, DIRECTION_WEST));
+    EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 0)), TileID_actor_with_dir(ACTOR_TANK, DIRECTION_WEST));
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(1, 0)), TILE_BUTTON_CLONE);
     EXPECT_EQ(Level_get_top_terrain(level, Position_from_xy(0, 1)), TILE_THIN_WALL_SOUTH);
   }
